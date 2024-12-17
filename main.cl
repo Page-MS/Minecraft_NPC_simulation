@@ -1,4 +1,7 @@
-;coordonnes du village minecraft
+
+;////////////////BASE DE FAITS///////////////////////
+
+;coordonnes du village minecraft, c'est la premiere composante de notre base de faits
 (setf plateau '(((x 0) (y 0) (hauteur 0) (interieur 1) (porte 0) (PNJ 0) (bed 1) (type_floor wood) (job_block 0))
                 ((x 1) (y 0) (hauteur 0) (interieur 1) (porte 0) (PNJ 0) (bed 0) (type_floor wood) (job_block 0))
                 ((x 2) (y 0) (hauteur 0) (interieur 1) (porte 0) (PNJ 0) (bed 0) (type_floor wood) (job_block 0))
@@ -38,11 +41,32 @@
              
                 ))
 
-;(setf BDR '(()
-            
-            
-            ))
+;(setf BDR '(() ))
 
+;l'etat du monde est update tout les tics, il represente la deuxieme composante de la base de faits
+(setf etat_du_monde '((heure 0) (monster_in_village 0) (player_in_village 0) (thunderstorm 0) (light 0)
+                      )
+  )
+; a run tout les tics
+(defun updateEtatDuMonde (etat_du_monde)
+  (progn (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
+             (incf (cadr(assoc 'heure etat_du_monde)) 2)
+           (setf (cadr(assoc 'heure etat_du_monde)) 0)
+           )
+    (when (< (random 3) 1)
+      (setf (cadr(assoc 'monster_in_village etat_du_monde)) (random 2))
+      )
+    (when (< (random 3) 1)
+      (setf (cadr(assoc 'player_in_village etat_du_monde)) (random 2))
+      )
+    (when (< (random 5) 1)
+      (setf (cadr(assoc 'thunderstorm etat_du_monde)) (random 2))
+      )
+    etat_du_monde
+   )
+  )
+
+(updateEtatDuMonde etat_du_monde)
 
 
 
