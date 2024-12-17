@@ -44,30 +44,13 @@
 ;(setf BDR '(() ))
 
 ;l'etat du monde est update tout les tics, il represente la deuxieme composante de la base de faits
-(setf etat_du_monde '((heure 0) (monster_in_village 0) (player_in_village 0) (thunderstorm 0) (light 0)
+(setf etat_du_monde '((heure 0) (monster_in_village 0) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0)
                       )
   )
-; a run tout les tics
-(defun updateEtatDuMonde (etat_du_monde)
-  (progn (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
-             (incf (cadr(assoc 'heure etat_du_monde)) 2)
-           (setf (cadr(assoc 'heure etat_du_monde)) 0)
-           )
-    (when (< (random 3) 1)
-      (setf (cadr(assoc 'monster_in_village etat_du_monde)) (random 2))
-      )
-    (when (< (random 3) 1)
-      (setf (cadr(assoc 'player_in_village etat_du_monde)) (random 2))
-      )
-    (when (< (random 5) 1)
-      (setf (cadr(assoc 'thunderstorm etat_du_monde)) (random 2))
-      )
-    etat_du_monde
-   )
-  )
 
-(updateEtatDuMonde etat_du_monde)
+;Le PNJ est la troisieme partie de notre base de faits
 
+(setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (indoor 1) (distance_to_work 5) (distance_to_bed 0))
 
 
 
@@ -160,6 +143,32 @@
             (setf resultat distance))))); Mettre a jour resultat si distance plus petite
     resultat)) ;; Retourner la distance minimale
 
-(distanceConcept (getCoord 3 4 plateau) 'bed plateau)
+;(distanceConcept (getCoord 3 4 plateau) 'bed plateau)
+
+; a run tout les tics pour update l etat du monde (certains evenements sont aleatoires)
+(defun updateEtatDuMonde (etat_du_monde)
+  (progn (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
+             (incf (cadr(assoc 'heure etat_du_monde)) 2)
+           (setf (cadr(assoc 'heure etat_du_monde)) 0)
+           )
+    (when (< (random 3) 1)
+      (setf (cadr(assoc 'monster_in_village etat_du_monde)) (random 2))
+      )
+    (when (< (random 3) 1)
+      (setf (cadr(assoc 'player_in_village etat_du_monde)) (random 2))
+      )
+    (when (< (random 5) 1)
+      (setf (cadr(assoc 'thunderstorm etat_du_monde)) (random 2))
+      )
+    (when (< (random 6) 1)
+      (incf (cadr(assoc 'player_emeralds etat_du_monde)) (random 3))
+      )
+
+    etat_du_monde
+   )
+  )
+
+;(updateEtatDuMonde etat_du_monde)
+
 
 
