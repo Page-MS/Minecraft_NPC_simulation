@@ -43,11 +43,8 @@
 
 
 ;l'etat du monde est update tout les tics, il represente la deuxieme composante de la base de faits
-<<<<<<< HEAD
+
 (setf etat_du_monde '((heure 0) (monster_in_village 0) (pnj_in_village 1) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1) (nb_baby_villager 0) (baby_villager_countdown 0) (work_block_grown 1) (work_block_grown_countdown 0)))
-=======
-(setf etat_du_monde '((heure 0) (monster_in_village 0) (pnj_in_village 2) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1) (nb_baby_villager 0) (baby_villager_countdown 0)))
->>>>>>> 2cb82b483e92c3548be9a7f2ca287f44bc63960b
 
 ;Le PNJ est la troisieme partie de notre base de faits
 (setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
@@ -272,7 +269,6 @@ plateau
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
             ((condition ((eq(getInfosWorld 'player_in_village)1)(< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))
-<<<<<<< HEAD
             
             
             ((condition ()) 
@@ -306,24 +302,11 @@ plateau
              (output ()) (action 0))
             ((condition ()) 
              (output ()) (action 0))
-          
-=======
-             
-                 
-            ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau))) (action 0))
-             
-            ((condition ((eq (getInfosPNJ 'nuit) 0) (< (getInfoPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) () )) 
-             (output ()) (action 0)) ; a  finir
-             
-            ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfosPNJ 'food_items) 11))) 
-             (output ((setInfosPNJ 'consenting 1))) (action 0))          
->>>>>>> 2cb82b483e92c3548be9a7f2ca287f44bc63960b
+         
             )
   )
   
 
-<<<<<<< HEAD
 (defun cclRegle (regle) 
   (cadr (assoc 'output regle))
   )
@@ -331,21 +314,6 @@ plateau
   (cadr (assoc 'condition regle))
   )
 (defun numRegle (regle) (caddr regle))
-
-;////////////MAIN GAME LOOP//////////
-(defun mainGameLoop (base_de_fait BDR num_iteration)
-  (if (> 0 num_iteration)
-      (dolist (regle BDR)
-        
-       )
-  )
-=======
-(defun getPremisseRegle (regle) 
-  (cadr(assoc 'condition regle)))
-(defun getOutputRegle (regle) 
-  (cadr(assoc 'output regle)))
-(defun isActionRule (regle) 
-  (cadr(assoc 'action regle)))
 
 
 ;////////////MAIN GAME LOOP//////////
@@ -355,15 +323,14 @@ plateau
       (dolist (regle BDR base_de_fait)
         (let ((conditions (getPremisseRegle regle))
               (outputs (getOutputRegle regle)))
-          (when (eval `(and ,@conditions)) ; Évalue les conditions dynamiquement
+          (when (eval `(and ,@conditions)) ; ?alue les conditions dynamiquement
               (dolist (output outputs)
                 (eval output)))) 
-        ;; Appel recursif avec une itération en moins
+        ;; Appel recursif avec une it?tion en moins
         (mainGameLoop nouvelle_base BDR (- num_iteration 1)))
         nouvelle_base)
-    ;; Si aucune itération restante, on retourne la base de faits
+    ;; Si aucune it?tion restante, on retourne la base de faits
     ))        
        
 
 (mainGameLoop big_base_de_fait BDR 3)
->>>>>>> 2cb82b483e92c3548be9a7f2ca287f44bc63960b
