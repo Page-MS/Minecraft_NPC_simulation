@@ -55,15 +55,15 @@
 ;////////////////FONCTIONS DE SERVICE///////////////////////
 
 
-(defun getInfosPNG (type)
+(defun getInfosPNJ (type)
   (cadr (assoc type Miguel)))
 
-(defun setInfosPNG (type value)
+(defun setInfosPNJ (type value)
   (setf (cadr (assoc type Miguel)) value)
   )
 
-(getInfosPNG 'consenting)
-(setInfosPNG 'consenting 1)
+(getInfosPNJ 'consenting)
+(setInfosPNJ 'consenting 1)
 
 (defun getInfosWorld (type)
   (cadr (assoc type etat_du_monde)))
@@ -76,17 +76,17 @@
 (getInfosWorld 'nuit)
 (setInfosWorld 'nuit 0)
 
-(defun getCoordPNG ()
+(defun getCoordPNJ ()
  (list (cadr (assoc 'coords_x Miguel)) (cadr (assoc 'coords_y Miguel)))
   )
 
-(defun setCoordPNG (x y)
+(defun setCoordPNJ (x y)
   (setf (cadr (assoc 'coords_x Miguel)) x)
   (setf (cadr (assoc 'coords_y Miguel)) y)
   )
 
-(getCoordPNG)
-(setCoordPNG 4 6)
+(getCoordPNJ)
+(setCoordPNJ 4 6)
 
 
 ;recupere les infos d un bloc a partir de ses coordonnes
@@ -169,7 +169,7 @@
 
 ;///////POUR AVOIR LES COORDS DES CONCEPTS LES PLUS PROCHES/////////
 
-;Retourne le block d'un type particluier le plus proche (coordonnee + distance)
+;Retourne le block d'un type particulier le plus proche (coordonnee + distance)
 (defun getNearestBlock (coord_depart type_block coords)
   (let ((resultat nil) (min 15)) ;; Distance initiale maximale
     (dolist (coord coords)
@@ -244,7 +244,7 @@ plateau
             ((condition ((or (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
              (output ((setInfosWorld 'nuit 0) (setInfosWorld 'breeding_count 0)))
             ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
-             (output ((setInfosPNG 'baby_villager_countdown (- (getInfosPNG 'baby_villager_countdown) 1)))))
+             (output ((setInfosPNJ 'baby_villager_countdown (- (getInfosPNJ 'baby_villager_countdown) 1)))))
             ((condition ((= (getInfosWorld 'baby_villager_countdown) 1)))
              (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+(getInfosWorld 'npc_in_village)1)))))
             ((condition ((equal 24 (getInfosWorld 'heure)))) 
@@ -261,14 +261,14 @@ plateau
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))))
              
                  
-            ((condition ((eq (getInfoPNG 'nuit) 1) (eq (getInfoPNG 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNG)) (cadr (getCoordPNG)) plateau) plateau))))
+            ((condition ((eq (getInfoPNJ 'nuit) 1) (eq (getInfoPNJ 'outside) 1))) 
+             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau))))
              
-            ((condition ((eq (getInfoPNG 'nuit) 0) (< (getInfoPNG 'breed_count) 2) (eq (getInfosPNG 'consenting) 1) () )) 
+            ((condition ((eq (getInfoPNJ 'nuit) 0) (< (getInfoPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) () )) 
              (output ())) ; à finir
              
-            ((condition ((eq (getInfoPNG 'breed_countdown) 0) (> (getInfoPNG 'food_items) 11))) 
-             (output ((setInfoPNG 'consenting 1))))
+            ((condition ((eq (getInfoPNJ 'breed_countdown) 0) (> (getInfoPNJ 'food_items) 11))) 
+             (output ((setInfoPNJ 'consenting 1))))
             
             
             ((condition ()) 
@@ -285,9 +285,12 @@ plateau
              (output ()))
           
             )
+            )
   )
 
 (defun cclRegle (regle) cadr (assoc 'output regle))
+
+
 (defun premisseRegle (regle) (cadr regle))
 (defun numRegle (regle) (caddr regle))
 
