@@ -240,58 +240,62 @@ plateau
 ;////////////////BASE DE REGLES///////////////////////
 
 (setf BDR '(((condition ((or (< (getInfosWorld 'heure) 8) (> (getInfosWorld 'heure) 19))) 
-             (output ((setInfosWorld 'nuit 1))))
+             (output ((setInfosWorld 'nuit 1))) (action 0)))
             ((condition ((or (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
-             (output ((setInfosWorld 'nuit 0) (setInfosWorld 'breeding_count 0)))
+             (output ((setInfosWorld 'nuit 0) (setInfosWorld 'breeding_count 0))) (action 0))
             ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
              (output ((setInfosPNJ 'baby_villager_countdown (- (getInfosPNJ 'baby_villager_countdown) 1)))))
             ((condition ((= (getInfosWorld 'baby_villager_countdown) 1)))
-             (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+(getInfosWorld 'npc_in_village)1)))))
+             (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+(getInfosWorld 'npc_in_village)1)))) (action 0))
             ((condition ((equal 24 (getInfosWorld 'heure)))) 
-             (output ((setInfosWorld 'heure 2))))
+             (output ((setInfosWorld 'heure 2))) (action 0))
             ((condition ((not(equal 24 (getInfosWorld 'heure))))) 
-             (output ((setInfosWorld 'heure (+ (getInfosWorld 'heure) 2)))))
+             (output ((setInfosWorld 'heure (+ (getInfosWorld 'heure) 2)))) (action 0))
             ((condition ((< (random 3) 1))) 
-             (output ((setInfosWorld 'monster_in_village (random 2)))))
-            ((condition ((< (random 3) 1)))) 
-             (output ((setInfosWorld 'player_in_village  (random 2)))))
+             (output ((setInfosWorld 'monster_in_village (random 2)))) (action 0))
+            ((condition ((< (random 3) 1))) 
+             (output ((setInfosWorld 'player_in_village  (random 2)))) (action 0))
             ((condition ((< (random 5) 1)))
-             (output ((setInfosWorld 'thunderstorm (random 2)))))
+             (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
             ((condition ((< (random 6) 1))) 
-             (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))))
+             (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))
              
                  
             ((condition ((eq (getInfoPNJ 'nuit) 1) (eq (getInfoPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau))))
+             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau))) (action 0))
              
             ((condition ((eq (getInfoPNJ 'nuit) 0) (< (getInfoPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) () )) 
-             (output ())) ; à finir
+             (output ()) (action 0)) ; à finir
              
             ((condition ((eq (getInfoPNJ 'breed_countdown) 0) (> (getInfoPNJ 'food_items) 11))) 
-             (output ((setInfoPNJ 'consenting 1))))
+             (output ((setInfoPNJ 'consenting 1))) (action 0))
             
             
             ((condition ()) 
-             (output ()))
+             (output ()) (action 0))
             ((condition ()) 
-             (output ()))
+             (output ()) (action 0))
             ((condition ()) 
-             (output ()))
+             (output ()) (action 0))
             ((condition ()) 
-             (output ()))
+             (output ()) (action 0))
             ((condition ()) 
-             (output ()))
+             (output ()) (action 0))
             ((condition ()) 
-             (output ()))
+             (output ()) (action 0))
           
             )
-            )
   )
+  
 
 (defun cclRegle (regle) cadr (assoc 'output regle))
-
-
 (defun premisseRegle (regle) (cadr regle))
 (defun numRegle (regle) (caddr regle))
 
-
+;////////////MAIN GAME LOOP//////////
+(defun mainGameLoop (base_de_fait BDR num_iteration)
+  (if (> 0 num_iteration)
+      (dolist (regle BDR)
+        
+       )
+  )
