@@ -44,9 +44,7 @@
 
 
 ;l'etat du monde est update tout les tics, il represente la deuxieme composante de la base de faits
-(setf etat_du_monde '((heure 0) (monster_in_village 0) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0)
-                      )
-  )
+(setf etat_du_monde '((heure 0) (monster_in_village 0) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1)))
 
 ;Le PNJ est la troisieme partie de notre base de faits
 (setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (indoor 1) (distance_to_work 5) (distance_to_bed 0) (move_toward_bed 0)))
@@ -154,10 +152,17 @@
 
 ; Fonction a run tout les tics pour update l etat du monde (certains evenements sont aleatoires)
 (defun updateEtatDuMonde (etat_du_monde)
-  (progn (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
-             (incf (cadr(assoc 'heure etat_du_monde)) 2)
-           (setf (cadr(assoc 'heure etat_du_monde)) 0)
-           )
+  (progn 
+    (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
+        (incf (cadr(assoc 'heure etat_du_monde)) 2)
+        (setf (cadr(assoc 'heure etat_du_monde)) 2)
+      )
+    
+    (if (or (< (cadr(assoc 'heure etat_du_monde)) 8) (> (cadr(assoc 'heure etat_du_monde)) 19))
+        (setf (cadr(assoc 'nuit etat_du_monde)) 1)
+        (setf (cadr(assoc 'nuit etat_du_monde)) 0)
+     )
+    
     (when (< (random 3) 1)
       (setf (cadr(assoc 'monster_in_village etat_du_monde)) (random 2))
       )
@@ -181,40 +186,65 @@
 
 ;permet de deplacer le NPC vers la porte la plus proche
 (defun moveTowardDoor (current_coords coords)
-  (dolist (coord coords)
-      (when (equal 1 (cadr (assoc 'porte coord)));; Si le concept est present sur le current_coord       
-        (let* ((x1 (cadr (assoc 'x current_coords))) 
-               (y1 (cadr (assoc 'y current_coords))) 
-               (x2 (cadr (assoc 'x coord))) 
-               (y2 (cadr (assoc 'y coord)))
-               (distance_x (- x1 x2)) (distance_y (- y1 y2)))
-          (if (and (< 0 distance_x) (< 2 (getHauteur (+ 1 x1) y1 coords)))
-              (incf (cadr(assoc 'x current_coords)) 1)
-            (if (and (> 0 distance_x) (< 2 (getHauteur (- 1 x1) y1 coords)))
-              (incf (cadr(assoc 'x current_coords)) 1)
-            (if (and (< 0 distance_y) (< 2 (getHauteur x1 (+ 1 y1) coords)))
-              (incf (cadr(assoc 'x current_coords)) 1)
-            (if (and (> 0 distance_y) (< 2 (getHauteur x1 (- 1 y1) coords)))
-              (incf (cadr(assoc 'x current_coords)) 1)
-              )
-              )
-              )
-            )
-          )
-          
-      )
+  (let* ((x1 (cadr (assoc 'x current_coords)))
+         (y1 (cadr (assoc 'y current_coords)))
+         (infoPorte (getNearestBlock current_coords 'porte coords))
+         (x2 (cadr (assoc 'x (car infoPorte))))
+         (y2 (cadr (assoc 'y (car infoPorte))))
+         (distance (cadr infoPorte))
+         (distance_x (- x1 x2))
+         (distance_y (- y1 y2))
+         )
+    
+    (while (and (not(eq x1 x2)) (not (eq y1 y2)))
+      (if (and (< 0 distance_x) (< 2 (getHauteur (+ 1 x1) y1 coords)))
+          (progn
+            (incf (cadr(assoc 'x current_coords)) 1)
+            (incf x1 1)
+            (setf distance_x (- x1 x2))
+            (print current_coords)
+           ))
+      (if (and (> 0 distance_x) (< 2 (getHauteur (- 1 x1) y1 coords)))
+          (progn
+            (decf (cadr(assoc 'x current_coords)) 1)
+            (decf x1)
+            (setf distance_x (- x1 x2))
+            (print current_coords)
+            ))
+      (if (and (< 0 distance_y) (< 2 (getHauteur x1 (+ 1 y1) coords)))
+          (progn
+            (incf (cadr(assoc 'x current_coords)) 1)
+            (incf y1)
+            (setf distance_y (- y1 y2))
+            (print current_coords)
+            ))
+      (if (and (> 0 distance_y) (< 2 (getHauteur x1 (- 1 y1) coords)))
+          (progn
+            (decf (cadr(assoc 'x current_coords)) 1)
+            (decf y1)
+            (setf distance_y (- y1 y2))
+            (print current_coords)
+            ))
+        )
     )
   )
 
 (moveTowardDoor (getInfosCoord 3 4 plateau) plateau)
 
+plateau
+
 ;////////////////BASE DE REGLES///////////////////////
 
-(setf BDR '(((reusable 1) (used 0)(conditions ((oustside) (< heure 8)))(output (move_toward_door))) 
-            ((reusable 1) (used 0)(conditions ((oustside) (> heure 19)))(output (move_toward_door))) 
-            ((reusable 1) (used 0)(conditions (move_toward_door))(output (setf current_coords (moveTowardDoor current_coords coords))))
+(setf BDR '(((condition (or (< heure 8) (> heure 19)) 
+             
+             (conditions ((oustside) (< heure 8))) (output (move_toward_door))) 
+            ((conditions ((oustside) (> heure 19)))(output (move_toward_door))) 
+            ((conditions (move_toward_door))(output (setf current_coords (moveTowardDoor current_coords coords))))
             )
   )
 
+(defun cclRegle (regle) cadr (assoc 'output regle))
+(defun premisseRegle (regle) (cadr regle))
+(defun numRegle (regle) (caddr regle))
 
 
