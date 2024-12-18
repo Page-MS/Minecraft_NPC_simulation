@@ -38,13 +38,12 @@
                 ((x 3) (y 5) (hauteur 0) (interieur 0) (porte 0) (PNJ 0) (bed 0) (type_floor pathway) (job_block 1))
                 ((x 4) (y 5) (hauteur 0) (interieur 0) (porte 0) (PNJ 0) (bed 0) (type_floor pathway) (job_block 1))
                 ((x 5) (y 5) (hauteur 0) (interieur 0) (porte 0) (PNJ 1) (bed 0) (type_floor pathway) (job_block 1))
-             
                 ))
 
 
 
 ;l'etat du monde est update tout les tics, il represente la deuxieme composante de la base de faits
-(setf etat_du_monde '((heure 0) (monster_in_village 0) (npc_in_village 2) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1) (nb_baby_villager 0) (baby_villager_countdown 0)))
+(setf etat_du_monde '((heure 0) (monster_in_village 0) (pnj_in_village 1) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1) (nb_baby_villager 0) (baby_villager_countdown 0) (work_block_grown 1) (work_block_grown_countdown 0)))
 
 ;Le PNJ est la troisieme partie de notre base de faits
 (setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
@@ -171,28 +170,31 @@
 
 ;Retourne le block d'un type particulier le plus proche (coordonnee + distance)
 (defun getNearestBlock (coord_depart type_block coords)
-  (let ((resultat nil) (min 15)) ;; Distance initiale maximale
+  (let ((resultat nil)
+        (min 15)
+        (block (getInfosCoord (car coord_depart) (cadr coord_depart) coords))
+        )
     (dolist (coord coords)
       (when (equal 1 (cadr (assoc type_block coord)));; Si un block du type recherche est present en x y       
-        (let ((distance (distanceCoords coord_depart coord))); Calculer la distance en une seule fois
+        (let ((distance (distanceCoords block coord))); Calculer la distance en une seule fois
           (when (< distance min)
             (setf min distance)
             (setf resultat (list coord distance)))))); Mettre a jour resultat si distance plus petite
     resultat)
   ); Retourner les coordonnees du block recherche et sa distance
 
-(getNearestBlock (getInfosCoord 3 4 plateau) 'porte plateau)
-(getNearestBlock (getInfosCoord 3 4 plateau) 'bed plateau)
-(getNearestBlock (getInfosCoord 1 4 plateau) 'job_block plateau)
+(getNearestBlock '(3 4) 'porte plateau)
+(getNearestBlock '(3 4) 'bed plateau)
+(getNearestBlock '(1 4) 'job_block plateau)
 
 
-;TODO : A fix, ?marche po
+;TODO : A fix, ?marche po // j'ai modifié des trucs je pense ça marche encore moins
 
 ;permet de deplacer le NPC vers la porte la plus proche
 (defun moveTowardDoor (current_coords coords)
-  (let* ((x1 (cadr (assoc 'x current_coords)))
-         (y1 (cadr (assoc 'y current_coords)))
-         (infoPorte (getNearestBlock current_coords 'porte coords))
+  (let* ((x1 (car current_coord))
+         (y1 (cadr current_coort))
+         (infoPorte (getNearestBlock current_coord 'porte coords))
          (x2 (cadr (assoc 'x (car infoPorte))))
          (y2 (cadr (assoc 'y (car infoPorte))))
          (distance (cadr infoPorte))
@@ -244,9 +246,16 @@ plateau
             ((condition ((or (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
              (output ((setInfosWorld 'nuit 0) (setInfosWorld 'breeding_count 0))) (action 0))
             ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
-             (output ((setInfosPNJ 'baby_villager_countdown (- (getInfosPNJ 'baby_villager_countdown) 1)))))
+             (output ((setInfosWorld 'baby_villager_countdown (- (getInfosWorld 'baby_villager_countdown) 1)))))
             ((condition ((= (getInfosWorld 'baby_villager_countdown) 1)))
              (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+(getInfosWorld 'npc_in_village)1)))) (action 0))
+            ((condition (> (getInfosPNJ 'breed_countdown) 0))
+             (output ((setInfosPNJ 'breed_countdown (- (getInfosPNJ 'breed_countdown) 1)))) (action 0))
+            ((condition (> (getInfosWorld 'work_block_grown_countdown) 0))
+             (output ((setInfosWorld 'work_block_grown_countdown (- (getInfosWorld 'work_block_grown_countdown) 1)))) (action 0))
+            ((condition ((eq (getInfosWorld 'work_block_grown_countdown) 0))) 
+              (output ((setInfosWorld 'work_block_grown_countdown 1)))(action 0))
+            
             ((condition ((equal 24 (getInfosWorld 'heure)))) 
              (output ((setInfosWorld 'heure 2))) (action 0))
             ((condition ((not(equal 24 (getInfosWorld 'heure))))) 
@@ -257,26 +266,35 @@ plateau
              (output ((setInfosWorld 'player_in_village  (random 2)))) (action 0))
             ((condition ((< (random 5) 1)))
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
-            ((condition ((< (random 6) 1))) 
+            ((condition ((eq(getInfosWorld 'player_in_village)1)(< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))
-             
-                 
-            ((condition ((eq (getInfoPNJ 'nuit) 1) (eq (getInfoPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau))) (action 0))
-             
-            ((condition ((eq (getInfoPNJ 'nuit) 0) (< (getInfoPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) () )) 
-             (output ()) (action 0)) ; à finir
-             
-            ((condition ((eq (getInfoPNJ 'breed_countdown) 0) (> (getInfoPNJ 'food_items) 11))) 
+            
+            
+            ((condition ()) 
+              (output ()) (action 0))
+            ((condition ()) 
+             (output ()) (action 0))
+            
+            ; se deplace vers le batiment le plus proche pour aller dormir
+            ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
+             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
+            
+            ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
+             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
+            
+            
+            ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfoPNJ 'food_items) 11))) 
              (output ((setInfoPNJ 'consenting 1))) (action 0))
             
+            ;; breed
+            ((condition ((eq (getInfosPNJ 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 4) (eq (getInfosPNJ 'breed_count_down) 0))) 
+             (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfoPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1))
             
-            ((condition ()) 
-             (output ()) (action 0))
-            ((condition ()) 
-             (output ()) (action 0))
-            ((condition ()) 
-             (output ()) (action 0))
+            
+            ;; farm
+            ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
+             (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1))
+            
             ((condition ()) 
              (output ()) (action 0))
             ((condition ()) 
@@ -288,8 +306,12 @@ plateau
   )
   
 
-(defun cclRegle (regle) cadr (assoc 'output regle))
-(defun premisseRegle (regle) (cadr regle))
+(defun cclRegle (regle) 
+  (cadr (assoc 'output regle))
+  )
+(defun premisseRegle (regle) 
+  (cadr (assoc 'condition regle))
+  )
 (defun numRegle (regle) (caddr regle))
 
 ;////////////MAIN GAME LOOP//////////
