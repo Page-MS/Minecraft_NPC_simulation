@@ -250,9 +250,9 @@ plateau
              (output ((setInfosWorld 'baby_villager_countdown (- (getInfosWorld 'baby_villager_countdown) 1)))))
             ((condition ((= (getInfosWorld 'baby_villager_countdown) 1)))
              (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+(getInfosWorld 'npc_in_village)1)))) (action 0))
-            ((condition (> (getInfosPNJ 'breed_countdown) 0))
+            ((condition ((> (getInfosPNJ 'breed_countdown) 0)))
              (output ((setInfosPNJ 'breed_countdown (- (getInfosPNJ 'breed_countdown) 1)))) (action 0))
-            ((condition (> (getInfosWorld 'work_block_grown_countdown) 0))
+            ((condition ((> (getInfosWorld 'work_block_grown_countdown) 0)))
              (output ((setInfosWorld 'work_block_grown_countdown (- (getInfosWorld 'work_block_grown_countdown) 1)))) (action 0))
             ((condition ((eq (getInfosWorld 'work_block_grown_countdown) 0))) 
               (output ((setInfosWorld 'work_block_grown_countdown 1)))(action 0))
@@ -264,10 +264,10 @@ plateau
             ((condition ((< (random 3) 1))) 
              (output ((setInfosWorld 'monster_in_village (random 2)))) (action 0))
             ((condition ((< (random 3) 1))) 
-             (output ((setInfosWorld 'pnj_in_village  (random 2)))) (action 0))
+             (output ((setInfosWorld 'player_in_village  (random 2)))) (action 0))
             ((condition ((< (random 5) 1)))
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
-            ((condition ((eq(getInfosWorld 'player_in_village)1)(< (random 6) 1))) 
+            ((condition ((eq(getInfosWorld 'player_in_village) 1)(< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))
             
             
@@ -276,21 +276,20 @@ plateau
             ((condition ()) 
              (output ()) (action 0))
             
-            ; se deplace vers le batiment le plus proche pour aller dormir
+            ; se deplace vers le batiment le plus proche pour aller dormir ou se réfugier à l'intérieur
             ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
             
             ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
             
-            
+           
+            ;; breed
             ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfoPNJ 'food_items) 11))) 
              (output ((setInfoPNJ 'consenting 1))) (action 0))
             
-            ;; breed
             ((condition ((eq (getInfosPNJ 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 4) (eq (getInfosPNJ 'breed_count_down) 0))) 
              (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfoPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1))
-            
             
             ;; farm
             ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
@@ -307,30 +306,26 @@ plateau
   )
   
 
-(defun cclRegle (regle) 
-  (cadr (assoc 'output regle))
-  )
-(defun premisseRegle (regle) 
-  (cadr (assoc 'condition regle))
-  )
-(defun numRegle (regle) (caddr regle))
+(defun getPremisseRegle (regle) 
+  (cadr(assoc 'condition regle)))
+(defun getOutputRegle (regle) 
+  (cadr(assoc 'output regle)))
+(defun isActionRule (regle) 
+  (cadr(assoc 'action regle)))
 
-
-;////////////MAIN GAME LOOP//////////
 (defun mainGameLoop (base_de_fait BDR num_iteration)
   (let ((nouvelle_base base_de_fait))
   (if (> num_iteration 0)
       (dolist (regle BDR base_de_fait)
         (let ((conditions (getPremisseRegle regle))
               (outputs (getOutputRegle regle)))
-          (when (eval `(and ,@conditions)) ; ?alue les conditions dynamiquement
+          (when (eval `(and ,@conditions)) ; Évalue les conditions dynamiquement
               (dolist (output outputs)
                 (eval output)))) 
-        ;; Appel recursif avec une it?tion en moins
+        ;; Appel recursif avec une itération en moins
         (mainGameLoop nouvelle_base BDR (- num_iteration 1)))
         nouvelle_base)
-    ;; Si aucune it?tion restante, on retourne la base de faits
+    ;; Si aucune itération restante, on retourne la base de faits
     ))        
        
-
 (mainGameLoop big_base_de_fait BDR 3)
