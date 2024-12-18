@@ -47,12 +47,48 @@
 (setf etat_du_monde '((heure 0) (monster_in_village 0) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1)))
 
 ;Le PNJ est la troisieme partie de notre base de faits
-(setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (indoor 1) (distance_to_work 5) (distance_to_bed 0) (move_toward_bed 0)))
+(setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (move_toward_bed 0)))
 
 ;La base de faits complete contenant toutes nos variables
-(setf big_base_de_fait '(plateau etat_du_monde Miguel))
+(setf big_base_de_fait (list plateau etat_du_monde Miguel))
 
 ;////////////////FONCTIONS DE SERVICE///////////////////////
+
+
+(defun getInfosPNG (type)
+  (cadr (assoc type Miguel)))
+
+(defun setInfosPNG (type value)
+  (setf (cadr (assoc type Miguel)) value)
+  )
+
+(getInfosPNG 'consenting)
+(setInfosPNG 'consenting 1)
+
+(defun getInfosWorld (type)
+  (cadr (assoc type etat_du_monde)))
+
+
+(defun setInfosWorld (type value)
+  (setf (cadr (assoc type etat_du_monde)) value)
+  )
+
+(getInfosWorld 'nuit)
+(setInfosWorld 'nuit 0)
+
+(defun getCoordPNG ()
+ (list (cadr (assoc 'coords_x Miguel)) (cadr (assoc 'coords_y Miguel)))
+  )
+
+(defun setCoordPNG (x y)
+  (setf (cadr (assoc 'coords_x Miguel)) x)
+  (setf (cadr (assoc 'coords_y Miguel)) y)
+  )
+
+(getCoordPNG)
+(setCoordPNG 4 6)
+
+
 ;recupere les infos d un bloc a partir de ses coordonnes
 (defun getInfosCoord (x y plateau)
   (dolist (coord plateau) 
@@ -182,6 +218,37 @@
 
 (updateEtatDuMonde etat_du_monde)
 
+
+
+(defun updatePNG (png)
+  (progn 
+    (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
+        (incf (cadr(assoc 'heure etat_du_monde)) 2)
+        (setf (cadr(assoc 'heure etat_du_monde)) 2)
+      )
+    
+    (if (or (< (cadr(assoc 'heure etat_du_monde)) 8) (> (cadr(assoc 'heure etat_du_monde)) 19))
+        (setf (cadr(assoc 'nuit etat_du_monde)) 1)
+        (setf (cadr(assoc 'nuit etat_du_monde)) 0)
+     )
+    
+    (when (< (random 3) 1)
+      (setf (cadr(assoc 'monster_in_village etat_du_monde)) (random 2))
+      )
+    (when (< (random 3) 1)
+      (setf (cadr(assoc 'player_in_village etat_du_monde)) (random 2))
+      )
+    (when (< (random 5) 1)
+      (setf (cadr(assoc 'thunderstorm etat_du_monde)) (random 2))
+      )
+    (when (< (random 6) 1)
+      (incf (cadr(assoc 'player_emeralds etat_du_monde)) (random 3))
+      )
+
+    etat_du_monde
+   )
+  )
+
 ;TODO : A fix, ?marche po
 
 ;permet de deplacer le NPC vers la porte la plus proche
@@ -235,11 +302,13 @@ plateau
 
 ;////////////////BASE DE REGLES///////////////////////
 
-(setf BDR '(((condition (or (< heure 8) (> heure 19)) 
-             
-             (conditions ((oustside) (< heure 8))) (output (move_toward_door))) 
-            ((conditions ((oustside) (> heure 19)))(output (move_toward_door))) 
-            ((conditions (move_toward_door))(output (setf current_coords (moveTowardDoor current_coords coords))))
+(setf BDR '(((condition ((eq (getInfoPNG 'nuit) 1) (eq (getInfoPNG 'outside) 1))) 
+             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNG)) (cadr (getCoordPNG)) plateau) plateau))))
+            ((condition ()) (output ()))
+            ((condition ()) (output ()))
+            ((condition ()) (output ()))
+
+          
             )
   )
 
