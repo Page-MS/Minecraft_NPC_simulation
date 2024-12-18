@@ -44,10 +44,10 @@
 
 
 ;l'etat du monde est update tout les tics, il represente la deuxieme composante de la base de faits
-(setf etat_du_monde '((heure 0) (monster_in_village 0) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1)))
+(setf etat_du_monde '((heure 0) (monster_in_village 0) (npc_in_village 2) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1) (nb_baby_villager 0) (baby_villager_countdown 0)))
 
 ;Le PNJ est la troisieme partie de notre base de faits
-(setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (move_toward_bed 0)))
+(setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
 
 ;La base de faits complete contenant toutes nos variables
 (setf big_base_de_fait (list plateau etat_du_monde Miguel))
@@ -186,69 +186,6 @@
 (getNearestBlock (getInfosCoord 1 4 plateau) 'job_block plateau)
 
 
-; Fonction a run tout les tics pour update l etat du monde (certains evenements sont aleatoires)
-(defun updateEtatDuMonde (etat_du_monde)
-  (progn 
-    (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
-        (incf (cadr(assoc 'heure etat_du_monde)) 2)
-        (setf (cadr(assoc 'heure etat_du_monde)) 2)
-      )
-    
-    (if (or (< (cadr(assoc 'heure etat_du_monde)) 8) (> (cadr(assoc 'heure etat_du_monde)) 19))
-        (setf (cadr(assoc 'nuit etat_du_monde)) 1)
-        (setf (cadr(assoc 'nuit etat_du_monde)) 0)
-     )
-    
-    (when (< (random 3) 1)
-      (setf (cadr(assoc 'monster_in_village etat_du_monde)) (random 2))
-      )
-    (when (< (random 3) 1)
-      (setf (cadr(assoc 'player_in_village etat_du_monde)) (random 2))
-      )
-    (when (< (random 5) 1)
-      (setf (cadr(assoc 'thunderstorm etat_du_monde)) (random 2))
-      )
-    (when (< (random 6) 1)
-      (incf (cadr(assoc 'player_emeralds etat_du_monde)) (random 3))
-      )
-
-    etat_du_monde
-   )
-  )
-
-(updateEtatDuMonde etat_du_monde)
-
-
-
-(defun updatePNG (png)
-  (progn 
-    (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
-        (incf (cadr(assoc 'heure etat_du_monde)) 2)
-        (setf (cadr(assoc 'heure etat_du_monde)) 2)
-      )
-    
-    (if (or (< (cadr(assoc 'heure etat_du_monde)) 8) (> (cadr(assoc 'heure etat_du_monde)) 19))
-        (setf (cadr(assoc 'nuit etat_du_monde)) 1)
-        (setf (cadr(assoc 'nuit etat_du_monde)) 0)
-     )
-    
-    (when (< (random 3) 1)
-      (setf (cadr(assoc 'monster_in_village etat_du_monde)) (random 2))
-      )
-    (when (< (random 3) 1)
-      (setf (cadr(assoc 'player_in_village etat_du_monde)) (random 2))
-      )
-    (when (< (random 5) 1)
-      (setf (cadr(assoc 'thunderstorm etat_du_monde)) (random 2))
-      )
-    (when (< (random 6) 1)
-      (incf (cadr(assoc 'player_emeralds etat_du_monde)) (random 3))
-      )
-
-    etat_du_monde
-   )
-  )
-
 ;TODO : A fix, ?marche po
 
 ;permet de deplacer le NPC vers la porte la plus proche
@@ -302,12 +239,55 @@ plateau
 
 ;////////////////BASE DE REGLES///////////////////////
 
-(setf BDR '(((condition ((eq (getInfoPNG 'nuit) 1) (eq (getInfoPNG 'outside) 1))) 
+(setf BDR '(((condition ((or (< (getInfosWorld 'heure) 8) (> (getInfosWorld 'heure) 19))) 
+             (output ((setInfosWorld 'nuit 1))))
+            ((condition ((or (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
+             (output ((setInfosWorld 'nuit 0)))
+            ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
+             (output ((setInfosPNG 'baby_villager_countdown (- (getInfosPNG 'baby_villager_countdown) 1)))))
+            ((condition ((= (getInfosWorld 'baby_villager_countdown) 1)))
+             (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+(getInfosWorld 'npc_in_village)1)))))
+            ((condition ((equal 24 (getInfosWorld 'heure)))) 
+             (output ((setInfosWorld 'heure 2))))
+            ((condition ((not(equal 24 (getInfosWorld 'heure))))) 
+             (output ((setInfosWorld 'heure (+ (getInfosWorld 'heure) 2)))))
+            ((condition ((< (random 3) 1))) 
+             (output ((setInfosWorld 'monster_in_village (random 2)))))
+            ((condition ((< (random 3) 1)))) 
+             (output ((setInfosWorld 'player_in_village  (random 2)))))
+            ((condition ((< (random 5) 1)))
+             (output ((setInfosWorld 'thunderstorm (random 2)))))
+            ((condition ((< (random 6) 1))) 
+             (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))))
+             
+             
+             
+            
+            
+          
+            
+            ((condition ((eq (getInfoPNG 'nuit) 1) (eq (getInfoPNG 'outside) 1))) 
              (output ((moveTowardDoor (getInfosCoord (car (getCoordPNG)) (cadr (getCoordPNG)) plateau) plateau))))
-            ((condition ()) (output ()))
-            ((condition ()) (output ()))
-            ((condition ()) (output ()))
-
+             
+             
+            ((condition ((eq (getInfoPNG 'nuit) 0) (< (getInfoPNG 'breed_count) 2) (eq (getInfosPNG 'consenting) 1) () )) 
+             (output ())) ; à finir
+            ((condition ((eq (getInfoPNG 'breed_countdown) 0) (> (getInfoPNG 'food_items) 11))) 
+             (output ((setInfoPNG 'consenting 1))))
+            
+            
+            ((condition ()) 
+             (output ()))
+            ((condition ()) 
+             (output ()))
+            ((condition ()) 
+             (output ()))
+            ((condition ()) 
+             (output ()))
+            ((condition ()) 
+             (output ()))
+            ((condition ()) 
+             (output ()))
           
             )
   )
