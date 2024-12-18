@@ -242,7 +242,7 @@ plateau
 (setf BDR '(((condition ((or (< (getInfosWorld 'heure) 8) (> (getInfosWorld 'heure) 19))) 
              (output ((setInfosWorld 'nuit 1))))
             ((condition ((or (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
-             (output ((setInfosWorld 'nuit 0)))
+             (output ((setInfosWorld 'nuit 0) (setInfosWorld 'breeding_count 0)))
             ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
              (output ((setInfosPNG 'baby_villager_countdown (- (getInfosPNG 'baby_villager_countdown) 1)))))
             ((condition ((= (getInfosWorld 'baby_villager_countdown) 1)))
@@ -260,18 +260,13 @@ plateau
             ((condition ((< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))))
              
-             
-             
-            
-            
-          
-            
+                 
             ((condition ((eq (getInfoPNG 'nuit) 1) (eq (getInfoPNG 'outside) 1))) 
              (output ((moveTowardDoor (getInfosCoord (car (getCoordPNG)) (cadr (getCoordPNG)) plateau) plateau))))
              
-             
             ((condition ((eq (getInfoPNG 'nuit) 0) (< (getInfoPNG 'breed_count) 2) (eq (getInfosPNG 'consenting) 1) () )) 
              (output ())) ; à finir
+             
             ((condition ((eq (getInfoPNG 'breed_countdown) 0) (> (getInfoPNG 'food_items) 11))) 
              (output ((setInfoPNG 'consenting 1))))
             
