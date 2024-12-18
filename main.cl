@@ -49,78 +49,76 @@
   )
 
 ;Le PNJ est la troisieme partie de notre base de faits
-
 (setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (indoor 1) (distance_to_work 5) (distance_to_bed 0) (move_toward_bed 0)))
 
 ;La base de faits complete contenant toutes nos variables
-
 (setf big_base_de_fait '(plateau etat_du_monde Miguel))
 
 ;////////////////FONCTIONS DE SERVICE///////////////////////
 ;recupere les infos d un bloc a partir de ses coordonnes
-(defun getCoord (x y plateau)
+(defun getInfosCoord (x y plateau)
   (dolist (coord plateau) 
     (if (and (equal x (cadr(assoc 'x coord))) (equal y (cadr(assoc 'y coord))))
         (return coord)
      ))
   )
 
-;(getCoord 0 1 plateau)
-;(getCoord 0 5 plateau)
+(getInfosCoord 0 1 plateau)
+(getInfosCoord 0 5 plateau)
 
 ;recupere la hauteur d'un bloc
 (defun getHauteur (x y plateau)
-  (let ((coord (getCoord x y plateau)))
+  (let ((coord (getInfosCoord x y plateau)))
     (cadr(assoc 'hauteur coord))
     ))
-;(getHauteur 3 0 plateau)
+(getHauteur 3 0 plateau)
 
 
 ;permet de savoir si un bloc est en interieur
 (defun isInterieur (x y plateau)
-  (let ((coord (getCoord x y plateau)))
+  (let ((coord (getInfosCoord x y plateau)))
     (cadr(cadddr coord))
     ))
 
-;(isInterieur 0 5 plateau)
+(isInterieur 0 5 plateau)
 
 ;permet de savoir si un bloc est une porte
 (defun isPorte (x y plateau)
-  (let ((coord (getCoord x y plateau)))
+  (let ((coord (getInfosCoord x y plateau)))
     (cadr(assoc 'porte coord))
     ))
 
-;(isPorte 0 5 plateau)
-;(isPorte 1 2 plateau)
+(isPorte 0 5 plateau)
+(isPorte 1 2 plateau)
 
 ;permet de savoir si un bloc a un PNJ
 (defun hasPNJ (x y plateau)
-  (let ((coord (getCoord x y plateau)))
+  (let ((coord (getInfosCoord x y plateau)))
     (cadr(assoc 'PNJ coord))
     ))
 
-;(hasPNJ 0 5 plateau)
+(hasPNJ 0 5 plateau)
 
 ;permet de savoir le type de sol du bloc
 (defun typeFloor (x y plateau)
-  (let ((coord (getCoord x y plateau)))
+  (let ((coord (getInfosCoord x y plateau)))
     (cadr(assoc 'type_floor coord))
     ))
 
-;(typeFloor 0 5 plateau)
+(typeFloor 0 5 plateau)
 
 ;permet de savoir si un bloc a un lit
 (defun isBed (x y plateau)
-  (let ((coord (getCoord x y plateau)))
+  (let ((coord (getInfosCoord x y plateau)))
     (cadr(assoc 'bed coord))
     ))
 
-;(isBed 0 5 plateau)
-;(isBed 0 0 plateau)
+(isBed 0 5 plateau)
+(isBed 0 0 plateau)
 
 ;permet de savoir si un bloc est un composteur
 (defun isJobBlock (x y plateau)
-  (let ((coord (getCoord x y plateau)))
+  (let ((coord (getInfosCoord x y plateau)))
     (cadr(assoc 'job_block coord))
     ))
 
@@ -132,63 +130,29 @@
   (let ((x1 (cadr (assoc 'x coords_depart))) (y1 (cadr (assoc 'y coords_depart))) (x2 (cadr (assoc 'x coords_arrivee))) (y2 (cadr (assoc 'y coords_arrivee))))
   (+ (abs (- x1 x2)) (abs (- y1 y2)))))
 
-;(distanceCoords (getCoord 0 1 plateau) (getCoord 3 5 plateau))
+(distanceCoords (getInfosCoord 0 1 plateau) (getInfosCoord 3 5 plateau))
+
 
 ;///////POUR AVOIR LES COORDS DES CONCEPTS LES PLUS PROCHES/////////
 
-;Retourne la porte la plus proche
-(defun getNearestDoor (coord_depart coords)
+;Retourne le block d'un type particluier le plus proche (coordonnee + distance)
+(defun getNearestBlock (coord_depart type_block coords)
   (let ((resultat nil) (min 15)) ;; Distance initiale maximale
     (dolist (coord coords)
-      (when (equal 1 (cadr (assoc 'porte coord)));; Si une porte est presente dans la coordonnée
+      (when (equal 1 (cadr (assoc type_block coord)));; Si un block du type recherche est present en x y       
         (let ((distance (distanceCoords coord_depart coord))); Calculer la distance en une seule fois
           (when (< distance min)
             (setf min distance)
-            (setf resultat coord))))); Mettre a jour resultat si distance plus petite
-        resultat)); Retourner la porte avec une distance minimale
+            (setf resultat (list coord distance)))))); Mettre a jour resultat si distance plus petite
+    resultat)
+  ); Retourner les coordonnees du block recherche et sa distance
 
-;(getNearestDoor (getCoord 3 4 plateau) plateau)
-
-;Retourne le lit la plus proche
-(defun getNearestBed (coord_depart coords)
-  (let ((resultat nil) (min 15)) ;; Distance initiale maximale
-    (dolist (coord coords)
-      (when (equal 1 (cadr (assoc 'bed coord)));; Si un lit est presente dans la coordonnée
-        (let ((distance (distanceCoords coord_depart coord))); Calculer la distance en une seule fois
-          (when (< distance min)
-            (setf min distance)
-            (setf resultat coord))))); Mettre a jour resultat si distance plus petite
-        resultat)); Retourner la porte avec une distance minimale
-
-;(getNearestBed (getCoord 3 4 plateau) plateau)
-
-;Retourne le champ la plus proche
-(defun getNearestJobBlock (coord_depart coords)
-  (let ((resultat nil) (min 15)) ;; Distance initiale maximale
-    (dolist (coord coords)
-      (when (equal 1 (cadr (assoc 'job_block coord)));; Si un champ est presente dans la coordonnée
-        (let ((distance (distanceCoords coord_depart coord))); Calculer la distance en une seule fois
-          (when (< distance min)
-            (setf min distance)
-            (setf resultat coord))))); Mettre a jour resultat si distance plus petite
-        resultat)); Retourner la porte avec une distance minimale
-
-;(getNearestJobBlock (getCoord 1 4 plateau) plateau)
+(getNearestBlock (getInfosCoord 3 4 plateau) 'porte plateau)
+(getNearestBlock (getInfosCoord 3 4 plateau) 'bed plateau)
+(getNearestBlock (getInfosCoord 1 4 plateau) 'job_block plateau)
 
 
-;permet de savoir a quelle distance notre NPC est d'un concept
-(defun distanceConcept (coord_depart concept coords)
-  (let ((resultat 15)) ;; Distance initiale maximale
-    (dolist (coord coords)
-      (when (equal 1 (cadr (assoc concept coord)));; Si le concept est present dans la coordonnée
-        (let ((distance (distanceCoords coord_depart coord))); Calculer la distance une seule fois
-          (when (< distance resultat)
-            (setf resultat distance))))); Mettre a jour resultat si distance plus petite
-    resultat)) ;; Retourner la distance minimale
-
-;(distanceConcept (getCoord 3 4 plateau) 'bed plateau)
-
-; a run tout les tics pour update l etat du monde (certains evenements sont aleatoires)
+; Fonction a run tout les tics pour update l etat du monde (certains evenements sont aleatoires)
 (defun updateEtatDuMonde (etat_du_monde)
   (progn (if (not(equal 24 (cadr(assoc 'heure etat_du_monde))))
              (incf (cadr(assoc 'heure etat_du_monde)) 2)
@@ -213,35 +177,36 @@
 
 (updateEtatDuMonde etat_du_monde)
 
-;TODO : A fix, ça marche po
+;TODO : A fix, ?marche po
+
 ;permet de deplacer le NPC vers la porte la plus proche
-;(defun moveTowardDoor (current_coords coords)
-;  (dolist (coord coords)
-;      (when (equal 1 (cadr (assoc 'porte coord)));; Si le concept est present dans la coordonnée
-;        (let* ((x1 (cadr (assoc 'x current_coords))) (y1 (cadr (assoc 'y current_coords))) (x2 (cadr (assoc 'x coord))) (y2 (cadr (assoc 'y coord)))
-;               (distance_x (- x1 x2)) (distance_y (- y1 y2)))
-;          (if (and (< 0 distance_x) (< 2 (getHauteur (+ 1 x1) y1 coords)))
-;              (incf (cadr(assoc 'x current_coords)) 1)
-;            (if (and (> 0 distance_x) (< 2 (getHauteur (- 1 x1) y1 coords)))
-;              (incf (cadr(assoc 'x current_coords)) 1)
-;            (if (and (< 0 distance_y) (< 2 (getHauteur x1 (+ 1 y1) coords)))
-;              (incf (cadr(assoc 'x current_coords)) 1)
-;            (if (and (> 0 distance_y) (< 2 (getHauteur x1 (- 1 y1) coords)))
-;              (incf (cadr(assoc 'x current_coords)) 1)
-;              )
-;              )
-;              )
-;            )
-;          current_coords
-;          )
-;          
-;      )
-;    )
-;  )
+(defun moveTowardDoor (current_coords coords)
+  (dolist (coord coords)
+      (when (equal 1 (cadr (assoc 'porte coord)));; Si le concept est present sur le current_coord       
+        (let* ((x1 (cadr (assoc 'x current_coords))) 
+               (y1 (cadr (assoc 'y current_coords))) 
+               (x2 (cadr (assoc 'x coord))) 
+               (y2 (cadr (assoc 'y coord)))
+               (distance_x (- x1 x2)) (distance_y (- y1 y2)))
+          (if (and (< 0 distance_x) (< 2 (getHauteur (+ 1 x1) y1 coords)))
+              (incf (cadr(assoc 'x current_coords)) 1)
+            (if (and (> 0 distance_x) (< 2 (getHauteur (- 1 x1) y1 coords)))
+              (incf (cadr(assoc 'x current_coords)) 1)
+            (if (and (< 0 distance_y) (< 2 (getHauteur x1 (+ 1 y1) coords)))
+              (incf (cadr(assoc 'x current_coords)) 1)
+            (if (and (> 0 distance_y) (< 2 (getHauteur x1 (- 1 y1) coords)))
+              (incf (cadr(assoc 'x current_coords)) 1)
+              )
+              )
+              )
+            )
+          )
+          
+      )
+    )
+  )
 
-
-
-;(moveTowardDoor (getCoord 3 4 plateau) plateau)
+(moveTowardDoor (getInfosCoord 3 4 plateau) plateau)
 
 ;////////////////BASE DE REGLES///////////////////////
 
