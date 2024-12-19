@@ -48,7 +48,7 @@
 
 ;Le PNJ est la troisieme partie de notre base de faits
 
-(setf Miguel '((consenting 0) (breed_count 0) (coords_x 3) (coords_y 4) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
+(setf Miguel '((consenting 0) (breed_count 0) (coords_x 3) (coords_y 4) (food_items 12) (outside 1) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
 
 
 ;La base de faits complete contenant toutes nos variables
@@ -176,7 +176,7 @@
 
 ;Retourne le block d'un type particulier le plus proche (coordonnee + distance)
 (defun getNearestBlock (coord_depart type_block coords)
-  (let ((resultat nil)
+  (let ((resultat ())
         (min 15)
         (block (getInfosCoord coord_depart coords))
         )
@@ -289,7 +289,7 @@
               (output ((setInfosWorld 'work_block_grown 1)))(action 0))
             
             
-            ((condition ((< (random 3) 1))) 
+            ((condition ((< (random 5) 1))) 
              (output ((setInfosWorld 'monster_in_village (random 2)))) (action 0))
             ((condition ((< (random 3) 1))) 
              (output ((setInfosWorld 'player_in_village  (random 2)))) (action 0))
@@ -302,10 +302,10 @@
             
             ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a l'interieur
             ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosWorld 'outside 0))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
+             (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
             
             ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosWorld 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
+             (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
             
            
             ;; breed
@@ -319,7 +319,7 @@
             ;; farm
             ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
              (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
-            ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 1) )) 
+            ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 0) )) 
              (output ()) (action 1) (phrase "Je fais dodo"))
             ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 3))) 
              (output ((setInfosWorld 'player_emeralds 0) (setInfosPNJ 'food_items 0))) (action 1) (phrase "Je fais des echanges avec la joueuse, ses emeraudes contre mon pain"))
@@ -364,13 +364,13 @@
                 (dolist (output outputs)
                   (eval output) ;; Exécute l'action
                   (print output)
-                  (if (eq action 1)
+                  )
+                (if (eq action 1)
                       (progn
                         (print (getPhrase regle))
                         (return)
                         )
                       )
-                  )
                 
                 )))
 
@@ -387,4 +387,8 @@
       )))
 
 (mainGameLoop big_base_de_fait BDR 10)
+(getNearestBlock (getCoordPNJ) 'job_block plateau)
+(getCoordPNJ)
 
+(distanceCoords (getCoordPNJ) '((X 2) (Y 4) (HAUTEUR 0) (INTERIEUR 0) (PORTE 0) (PNJ 0) (BED 0)
+  (TYPE_FLOOR PATHWAY) (JOB_BLOCK 1)))
