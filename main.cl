@@ -47,7 +47,7 @@
 (setf etat_du_monde '((heure 0) (monster_in_village 0) (pnj_in_village 1) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1) (nb_baby_villager 0) (baby_villager_countdown 0) (work_block_grown 1) (work_block_grown_countdown 0)))
 
 ;Le PNJ est la troisieme partie de notre base de faits
-(setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
+(setf Miguel '((consenting 0) (breed_count 0) (coords_x 3) (coords_y 4) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
 
 ;La base de faits complete contenant toutes nos variables
 (setf big_base_de_fait (list plateau etat_du_monde Miguel))
@@ -312,8 +312,8 @@
             ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
              (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
             
-            ;((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0) )) 
-            ; (output (moveTowardDoor (getCoordPNJ) plateau)) (action 1) (phrase "C est la nuit, vite, je me dirige vers chez moi"))
+            ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0) )) 
+             (output (moveTowardDoor (getCoordPNJ) plateau)) (action 1) (phrase "C est la nuit, vite, je me dirige vers chez moi"))
             ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 1) )) 
              (output ()) (action 1) (phrase "Je fais dodo"))
             ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 5))) 
@@ -341,17 +341,17 @@
   (let ((nouvelle_base base_de_fait)
         (action 0)) ;; Initialise une copie de la base de faits
     
-    (print num_iteration) ;; Affiche l'itération actuelle
+    (print num_iteration) ;; Affiche l'iteration actuelle
 
-    ;; Si le nombre d'itérations est encore positif
+    ;; Si le nombre d'iterations est encore positif
     (if (and(> num_iteration 0) (eq action 0))
         (progn
-          ;; Parcours des règles dans la base de règles (BDR)
+          ;; Parcours des regles dans la base de regles (BDR)
           (dolist (regle BDR)
             (let ((conditions (getPremisseRegle regle))
                   (outputs (getOutputRegle regle))
                   (action (isActionRule regle)))
-              ;; Évaluer les conditions de la règle
+              ;; evaluer les conditions de la règle
               (when (eval `(and ,@conditions)) 
                 ;; Appliquer les actions si les conditions sont vraies
                 (dolist (output outputs)
@@ -365,10 +365,10 @@
                       )
                   ))))
 
-          ;; Appel récursif pour l'itération suivante
+          ;; Appel recursif pour l'iteration suivante
           (mainGameLoop nouvelle_base BDR (- num_iteration 1)))
 
         ;; Sinon, retourner la base de faits (fin de la boucle)
         etat_du_monde)))
        
-(mainGameLoop big_base_de_fait BDR 60)
+(mainGameLoop big_base_de_fait BDR 20)
