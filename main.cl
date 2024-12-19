@@ -238,6 +238,28 @@
 
 (moveTowardDoor '(3 4) plateau)
 
+;permet de se balader au hasard
+
+(defun wanderAround (coords)
+  (let ((test_coords coords))
+    (progn
+      (if (< (random 1) 1) 
+          (incf (cadr test_coords) (- (random 3) 1));pour faire entre -1 et 1
+        )
+      (if (< (random 1) 1) 
+          (incf (car test_coords) (- (random 3) 1));pour faire entre -1 et 1
+        )
+      (if (and (< (car test_coords) 6) (> (car test_coords) -1) (< (cadr test_coords) 6) (> (cadr test_coords) -1) (< (getHauteur (car test_coords) (cadr test_coords) plateau ) 3))  
+          (setCoordPNJ (car test_coords) (cadr test_coords));pour eviter de monter sur un mur
+        )
+      )
+    (getCoordPNJ))
+  )
+
+(getHauteur 3 1 plateau)
+
+(wanderAround '(4 2)) 
+
 
 ;////////////////BASE DE REGLES///////////////////////
 
@@ -270,12 +292,12 @@
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
             ((condition ((eq(getInfosWorld 'player_in_village) 1)(< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))           
-            ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a� l'interieur
+            ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a l'interieur
             ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
+             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
             
             ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
+             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
             
            
             ;; breed
@@ -283,11 +305,12 @@
              (output ((setInfosPNJ 'consenting 1))) (action 0))
             
             ((condition ((eq (getInfosWorld 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 4) (eq (getInfosPNJ 'breed_count_down) 0))) 
-             (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfoPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1))
+             (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfoPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1)
+             (phrase "Je... me reproduit"))
             
             ;; farm
             ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
-             (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1))
+             (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
             
             ;((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0) )) 
             ; (output (moveTowardDoor (getCoordPNJ) plateau)) (action 1) (phrase "C est la nuit, vite, je me dirige vers chez moi"))
@@ -295,8 +318,8 @@
              (output ()) (action 1) (phrase "Je fais dodo"))
             ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 5))) 
              (output ((setInfosWorld 'player_emeralds 0) (setInfosPNJ 'food_items 0))) (action 1) (phrase "Je fais des echanges avec la joueuse, ses emeraudes contre mon pain"))
-            ((condition ((< (random 3) 1))) 
-             (output ()) (action 0))
+            ((condition ((< (random 2) 1))) 
+             (output ((wanderAround (getCoordPNJ)))) (action 1) (phrase "Je me balade"))
             ((condition ()) 
              (output ()) (action 1) (phrase "HMMMMMM Je m ennuie") )
          
