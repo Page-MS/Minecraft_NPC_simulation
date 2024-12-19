@@ -105,7 +105,7 @@
   (let ((coord (getInfosCoord x y plateau)))
     (cadr(assoc 'hauteur coord))
     ))
-(getHauteur 3 0 plateau)
+(getHauteur 2 5 plateau)
 
 
 ;permet de savoir si un bloc est en interieur
@@ -160,11 +160,11 @@
 (isJobBlock 0 0 plateau)
 
 ;;calcul de la distance de Manhattan entre deux blocs
-(defun distanceCoords (coords_depart coords_arrivee)
-  (let ((x1 (cadr (assoc 'x coords_depart))) (y1 (cadr (assoc 'y coords_depart))) (x2 (cadr (assoc 'x coords_arrivee))) (y2 (cadr (assoc 'y coords_arrivee))))
+(defun distanceCoords (coord_depart coords_arrivee)
+  (let ((x1 (car coord_depart)) (y1 (cadr coord_depart)) (x2 (cadr (assoc 'x coords_arrivee))) (y2 (cadr (assoc 'y coords_arrivee))))
   (+ (abs (- x1 x2)) (abs (- y1 y2)))))
 
-(distanceCoords (getInfosCoord 0 1 plateau) (getInfosCoord 3 5 plateau))
+(distanceCoords '(0 1) (getInfosCoord 3 5 plateau))
 
 
 ;///////POUR AVOIR LES COORDS DES CONCEPTS LES PLUS PROCHES/////////
@@ -177,7 +177,7 @@
         )
     (dolist (coord coords)
       (when (equal 1 (cadr (assoc type_block coord)));; Si un block du type recherche est present en x y       
-        (let ((distance (distanceCoords block coord))); Calculer la distance en une seule fois
+        (let ((distance (distanceCoords coord_depart coord))); Calculer la distance en une seule fois
           (when (< distance min)
             (setf min distance)
             (setf resultat (list coord distance)))))); Mettre a jour resultat si distance plus petite
@@ -188,14 +188,11 @@
 (getNearestBlock '(3 4) 'bed plateau)
 (getNearestBlock '(1 4) 'job_block plateau)
 
-
-;TODO : A fix, ?marche po // j'ai modifie des trucs je pense ca marche encore moins
-
 ;permet de deplacer le NPC vers la porte la plus proche
 (defun moveTowardDoor (current_coords coords)
-  (let* ((x1 (car current_coord))
-         (y1 (cadr current_coort))
-         (infoPorte (getNearestBlock current_coord 'porte coords))
+  (let* ((x1 (car current_coords))
+         (y1 (cadr current_coords))
+         (infoPorte (getNearestBlock current_coords 'porte coords))
          (x2 (cadr (assoc 'x (car infoPorte))))
          (y2 (cadr (assoc 'y (car infoPorte))))
          (distance (cadr infoPorte))
@@ -204,41 +201,42 @@
          )
     
     (while (and (not(eq x1 x2)) (not (eq y1 y2)))
-      (if (and (< 0 distance_x) (< 2 (getHauteur (+ 1 x1) y1 coords)))
-          (progn
-            (incf (cadr(assoc 'x current_coords)) 1)
+     (if (and (< distance_x 0) (< (getHauteur (+ x1 1) y1 coords) 2))
+         (progn
+            (incf (car current_coords) 1)
             (incf x1 1)
             (setf distance_x (- x1 x2))
             (print current_coords)
            ))
-      (if (and (> 0 distance_x) (< 2 (getHauteur (- 1 x1) y1 coords)))
+    (if (and (> distance_x 0) (< (getHauteur (- x1 1) y1 coords) 2))
           (progn
-            (decf (cadr(assoc 'x current_coords)) 1)
+            (decf (car current_coords) 1)
             (decf x1)
             (setf distance_x (- x1 x2))
             (print current_coords)
             ))
-      (if (and (< 0 distance_y) (< 2 (getHauteur x1 (+ 1 y1) coords)))
+    
+     (if (and (< distance_y 0) (< (getHauteur x1 (+ y1 1) coords) 2))
           (progn
-            (incf (cadr(assoc 'x current_coords)) 1)
+            (incf (cadr current_coords) 1)
             (incf y1)
             (setf distance_y (- y1 y2))
             (print current_coords)
             ))
-      (if (and (> 0 distance_y) (< 2 (getHauteur x1 (- 1 y1) coords)))
+      (if (and (> distance_y 0) (< (getHauteur x1 (- y1 1) coords) 2))
           (progn
-            (decf (cadr(assoc 'x current_coords)) 1)
+            (decf (cadr current_coords) 1)
             (decf y1)
             (setf distance_y (- y1 y2))
             (print current_coords)
             ))
-        )
+      )
+     current_coords
     )
   )
 
-(moveTowardDoor (getInfosCoord 3 4 plateau) plateau)
+(moveTowardDoor '(3 4) plateau)
 
-plateau
 
 ;////////////////BASE DE REGLES///////////////////////
 
@@ -269,7 +267,7 @@ plateau
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
             ((condition ((eq(getInfosWorld 'player_in_village) 1)(< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))           
-            ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a  l'interieur
+            ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier aï¿½ l'interieur
             ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
             
