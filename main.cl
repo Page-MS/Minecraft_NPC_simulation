@@ -86,7 +86,7 @@
   )
 
 (getCoordPNJ)
-(setCoordPNJ 4 6)
+(setCoordPNJ 4 2)
 
 
 ;recupere les infos d un bloc a partir de ses coordonnes
@@ -189,7 +189,7 @@
 (getNearestBlock '(1 4) 'job_block plateau)
 
 
-;TODO : A fix, ?marche po // j'ai modifié des trucs je pense ça marche encore moins
+;TODO : A fix, ?marche po // j'ai modifie des trucs je pense ca marche encore moins
 
 ;permet de deplacer le NPC vers la porte la plus proche
 (defun moveTowardDoor (current_coords coords)
@@ -268,15 +268,8 @@ plateau
             ((condition ((< (random 5) 1)))
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
             ((condition ((eq(getInfosWorld 'player_in_village) 1)(< (random 6) 1))) 
-             (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))
-            
-            
-            ((condition ()) 
-              (output ()) (action 0))
-            ((condition ()) 
-             (output ()) (action 0))
-            
-            ; se deplace vers le batiment le plus proche pour aller dormir ou se réfugier à l'intérieur
+             (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))           
+            ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a� l'interieur
             ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1))
             
@@ -285,8 +278,8 @@ plateau
             
            
             ;; breed
-            ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfoPNJ 'food_items) 11))) 
-             (output ((setInfoPNJ 'consenting 1))) (action 0))
+            ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfosPNJ 'food_items) 11))) 
+             (output ((setInfosPNJ 'consenting 1))) (action 0))
             
             ((condition ((eq (getInfosPNJ 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 4) (eq (getInfosPNJ 'breed_count_down) 0))) 
              (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfoPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1))
@@ -319,13 +312,13 @@ plateau
       (dolist (regle BDR base_de_fait)
         (let ((conditions (getPremisseRegle regle))
               (outputs (getOutputRegle regle)))
-          (when (eval `(and ,@conditions)) ; Évalue les conditions dynamiquement
+          (when (eval `(and ,@conditions)) ; evalue les conditions dynamiquement
               (dolist (output outputs)
                 (eval output)))) 
-        ;; Appel recursif avec une itération en moins
+        ;; Appel recursif avec une iteration en moins
         (mainGameLoop nouvelle_base BDR (- num_iteration 1)))
         nouvelle_base)
-    ;; Si aucune itération restante, on retourne la base de faits
+    ;; Si aucune iteration restante, on retourne la base de faits
     ))        
        
 (mainGameLoop big_base_de_fait BDR 3)
