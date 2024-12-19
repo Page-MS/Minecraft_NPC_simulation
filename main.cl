@@ -47,7 +47,7 @@
 (setf etat_du_monde '((heure 0) (monster_in_village 0) (pnj_in_village 1) (player_in_village 0) (player_emeralds 0) (thunderstorm 0) (light 0) (nuit 1) (nb_baby_villager 0) (baby_villager_countdown 0) (work_block_grown 1) (work_block_grown_countdown 0)))
 
 ;Le PNJ est la troisieme partie de notre base de faits
-(setf Miguel '((consenting 0) (breed_count 0) (coords_x 0) (coords_y 0) (food_items 12) (outside 0) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
+(setf Miguel '((consenting 0) (breed_count 0) (coords_x 4) (coords_y 2) (food_items 12) (outside 1) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
 
 ;La base de faits complete contenant toutes nos variables
 (setf big_base_de_fait (list plateau etat_du_monde Miguel))
@@ -74,8 +74,8 @@
   (setf (cadr (assoc type etat_du_monde)) value)
   )
 
-(getInfosWorld 'nuit)
-(setInfosWorld 'nuit 0)
+;(getInfosWorld 'nuit)
+;(setInfosWorld 'nuit 0)
 
 (defun getCoordPNJ ()
  (list (cadr (assoc 'coords_x Miguel)) (cadr (assoc 'coords_y Miguel)))
@@ -86,86 +86,88 @@
   (setf (cadr (assoc 'coords_y Miguel)) y)
   )
 
-(getCoordPNJ)
-(setCoordPNJ 4 2)
+;(getCoordPNJ)
+;(setCoordPNJ 4 2)
 
 
 ;recupere les infos d un bloc a partir de ses coordonnes
-(defun getInfosCoord (x y plateau)
+(defun getInfosCoord (current_coord plateau)
   (dolist (coord plateau) 
-    (if (and (equal x (cadr(assoc 'x coord))) (equal y (cadr(assoc 'y coord))))
+    (if (and (equal (car current_coord) (cadr(assoc 'x coord))) (equal (cadr current_coord) (cadr(assoc 'y coord))))
+
         (return coord)
      ))
   )
 
-(getInfosCoord 0 1 plateau)
-(getInfosCoord 0 5 plateau)
+;(getInfosCoord '(0 1) plateau)
+;(getInfosCoord '(0 5) plateau)
 
 ;recupere la hauteur d'un bloc
-(defun getHauteur (x y plateau)
-  (let ((coord (getInfosCoord x y plateau)))
+(defun getHauteur (current_coord plateau)
+  (let ((coord (getInfosCoord current_coord plateau)))
     (cadr(assoc 'hauteur coord))
     ))
-(getHauteur 2 5 plateau)
+
+;(getHauteur '(2 5) plateau)
 
 
 ;permet de savoir si un bloc est en interieur
-(defun isInterieur (x y plateau)
-  (let ((coord (getInfosCoord x y plateau)))
-    (cadr(cadddr coord))
+(defun isInterieur (current_coord plateau)
+  (let ((info (getInfosCoord current_coord plateau)))
+    (cadr(cadddr info))
     ))
 
-(isInterieur 0 5 plateau)
+;(isInterieur '(0 5) plateau)
 
 ;permet de savoir si un bloc est une porte
-(defun isPorte (x y plateau)
-  (let ((coord (getInfosCoord x y plateau)))
+(defun isPorte (current_coord plateau)
+  (let ((coord (getInfosCoord current_coord plateau)))
     (cadr(assoc 'porte coord))
     ))
 
-(isPorte 0 5 plateau)
-(isPorte 1 2 plateau)
+;(isPorte '(0 5) plateau)
+;(isPorte '(1 2) plateau)
 
 ;permet de savoir si un bloc a un PNJ
-(defun hasPNJ (x y plateau)
-  (let ((coord (getInfosCoord x y plateau)))
+(defun hasPNJ (current_coord plateau)
+  (let ((coord (getInfosCoord current_coord plateau)))
     (cadr(assoc 'PNJ coord))
     ))
 
-(hasPNJ 0 5 plateau)
+;(hasPNJ '(0 5) plateau)
 
 ;permet de savoir le type de sol du bloc
-(defun typeFloor (x y plateau)
-  (let ((coord (getInfosCoord x y plateau)))
+(defun typeFloor (current_coord plateau)
+  (let ((coord (getInfosCoord current_coord plateau)))
     (cadr(assoc 'type_floor coord))
     ))
 
-(typeFloor 0 5 plateau)
+;(typeFloor '(0 5) plateau)
 
 ;permet de savoir si un bloc a un lit
-(defun isBed (x y plateau)
-  (let ((coord (getInfosCoord x y plateau)))
+(defun isBed (current_coord plateau)
+  (let ((coord (getInfosCoord current_coord plateau)))
     (cadr(assoc 'bed coord))
     ))
 
-(isBed 0 5 plateau)
-(isBed 0 0 plateau)
+;(isBed '(0 5) plateau)
+;(isBed '(0 0) plateau)
 
 ;permet de savoir si un bloc est un composteur
-(defun isJobBlock (x y plateau)
-  (let ((coord (getInfosCoord x y plateau)))
+(defun isJobBlock (current_coord plateau)
+  (let ((coord (getInfosCoord current_coord plateau)))
     (cadr(assoc 'job_block coord))
     ))
 
-(isJobBlock 0 5 plateau)
-(isJobBlock 0 0 plateau)
+;(isJobBlock '(0 5) plateau)
+;(isJobBlock '(0 0) plateau)
 
 ;;calcul de la distance de Manhattan entre deux blocs
 (defun distanceCoords (coord_depart coords_arrivee)
   (let ((x1 (car coord_depart)) (y1 (cadr coord_depart)) (x2 (cadr (assoc 'x coords_arrivee))) (y2 (cadr (assoc 'y coords_arrivee))))
   (+ (abs (- x1 x2)) (abs (- y1 y2)))))
 
-(distanceCoords '(0 1) (getInfosCoord 3 5 plateau))
+;(distanceCoords '(0 1) (getInfosCoord '(3 5) plateau))
 
 
 ;///////POUR AVOIR LES COORDS DES CONCEPTS LES PLUS PROCHES/////////
@@ -174,7 +176,7 @@
 (defun getNearestBlock (coord_depart type_block coords)
   (let ((resultat nil)
         (min 15)
-        (block (getInfosCoord (car coord_depart) (cadr coord_depart) coords))
+        (block (getInfosCoord coord_depart coords))
         )
     (dolist (coord coords)
       (when (equal 1 (cadr (assoc type_block coord)));; Si un block du type recherche est present en x y       
@@ -185,9 +187,9 @@
     resultat)
   ); Retourner les coordonnees du block recherche et sa distance
 
-(getNearestBlock '(3 4) 'porte plateau)
-(getNearestBlock '(3 4) 'bed plateau)
-(getNearestBlock '(1 4) 'job_block plateau)
+;(getNearestBlock '(3 4) 'porte plateau)
+;(getNearestBlock '(3 4) 'bed plateau)
+;(getNearestBlock '(1 4) 'job_block plateau)
 
 ;permet de deplacer le NPC vers la porte la plus proche
 (defun moveTowardDoor (current_coords coords)
@@ -202,14 +204,14 @@
          )
     
     (while (and (not(eq x1 x2)) (not (eq y1 y2)))
-     (if (and (< distance_x 0) (< (getHauteur (+ x1 1) y1 coords) 2))
+     (if (and (< distance_x 0) (< (getHauteur (list (+ x1 1) y1) coords) 2))
          (progn
             (incf (car current_coords) 1)
             (incf x1 1)
             (setf distance_x (- x1 x2))
             (print current_coords)
            ))
-    (if (and (> distance_x 0) (< (getHauteur (- x1 1) y1 coords) 2))
+    (if (and (> distance_x 0) (< (getHauteur (list (- x1 1) y1) coords) 2))
           (progn
             (decf (car current_coords) 1)
             (decf x1)
@@ -217,14 +219,14 @@
             (print current_coords)
             ))
     
-     (if (and (< distance_y 0) (< (getHauteur x1 (+ y1 1) coords) 2))
+     (if (and (< distance_y 0) (< (getHauteur (list x1 (+ y1 1)) coords) 2))
           (progn
             (incf (cadr current_coords) 1)
             (incf y1)
             (setf distance_y (- y1 y2))
             (print current_coords)
             ))
-      (if (and (> distance_y 0) (< (getHauteur x1 (- y1 1) coords) 2))
+      (if (and (> distance_y 0) (< (getHauteur (list x1 (- y1 1)) coords) 2))
           (progn
             (decf (cadr current_coords) 1)
             (decf y1)
@@ -236,7 +238,7 @@
     )
   )
 
-(moveTowardDoor '(3 4) plateau)
+;(moveTowardDoor '(3 4) plateau)
 
 ;permet de se balader au hasard
 
@@ -249,16 +251,16 @@
       (if (< (random 1) 1) 
           (incf (car test_coords) (- (random 3) 1));pour faire entre -1 et 1
         )
-      (if (and (< (car test_coords) 6) (> (car test_coords) -1) (< (cadr test_coords) 6) (> (cadr test_coords) -1) (< (getHauteur (car test_coords) (cadr test_coords) plateau ) 3))  
+      (if (and (< (car test_coords) 6) (> (car test_coords) -1) (< (cadr test_coords) 6) (> (cadr test_coords) -1) (< (getHauteur test_coords plateau ) 3))  
           (setCoordPNJ (car test_coords) (cadr test_coords));pour eviter de monter sur un mur
         )
       )
     (getCoordPNJ))
   )
 
-(getHauteur 3 1 plateau)
+;(wanderAround '(4 2)) 
 
-(wanderAround '(4 2)) 
+(isInterieur '(4 2) plateau)
 
 
 ;////////////////BASE DE REGLES///////////////////////
@@ -292,12 +294,15 @@
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
             ((condition ((eq(getInfosWorld 'player_in_village) 1)(< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))           
+
+
+            
             ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a l'interieur
             ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
+             (output ((moveTowardDoor (getInfosCoord (getCoordPNJ) plateau) plateau) (setInfosPNJ 'outside 0) (print "NUII"))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
             
             ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (car (getCoordPNJ)) (cadr (getCoordPNJ)) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
+             (output ((moveTowardDoor (getInfosCoord (getCoordPNJ) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
             
            
             ;; breed
@@ -312,13 +317,11 @@
             ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
              (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
             
-            ;((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0) )) 
-            ; (output (moveTowardDoor (getCoordPNJ) plateau)) (action 1) (phrase "C est la nuit, vite, je me dirige vers chez moi"))
             ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 1) )) 
              (output ()) (action 1) (phrase "Je fais dodo"))
-            ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 5))) 
+            ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 3))) 
              (output ((setInfosWorld 'player_emeralds 0) (setInfosPNJ 'food_items 0))) (action 1) (phrase "Je fais des echanges avec la joueuse, ses emeraudes contre mon pain"))
-            ((condition ((< (random 2) 1))) 
+            ((condition ((< (random 2) 1) (eq (getInfosPNJ 'outside) 1)))
              (output ((wanderAround (getCoordPNJ)))) (action 1) (phrase "Je me balade"))
             ((condition ()) 
              (output ()) (action 1) (phrase "HMMMMMM Je m ennuie") )
@@ -342,7 +345,8 @@
         (action 0)) ;; Initialise une copie de la base de faits
     
     (print num_iteration) ;; Affiche l'itération actuelle
-
+    (print Miguel)
+    (print etat_du_monde)
     ;; Si le nombre d'itérations est encore positif
     (if (and(> num_iteration 0) (eq action 0))
         (progn
@@ -363,12 +367,20 @@
                         (return)
                         )
                       )
-                  ))))
+                  )
+                
+                )))
 
           ;; Appel récursif pour l'itération suivante
           (mainGameLoop nouvelle_base BDR (- num_iteration 1)))
 
         ;; Sinon, retourner la base de faits (fin de la boucle)
-        etat_du_monde)))
+      (progn
+        Miguel
+        etat_du_monde
+        )
+      
+      
+      )))
        
-(mainGameLoop big_base_de_fait BDR 60)
+(mainGameLoop big_base_de_fait BDR 10)
