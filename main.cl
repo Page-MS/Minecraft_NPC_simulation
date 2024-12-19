@@ -182,7 +182,7 @@
         )
     (dolist (coord coords)
       (when (equal 1 (cadr (assoc type_block coord)));; Si un block du type recherche est present en x y       
-        (let ((distance (distanceCoords coord_depart block))); Calculer la distance en une seule fois
+        (let ((distance (distanceCoords coord_depart coord))); Calculer la distance en une seule fois
           (when (< distance min)
             (setf min distance)
             (setf resultat (list coord distance)))))); Mettre a jour resultat si distance plus petite
@@ -289,7 +289,7 @@
               (output ((setInfosWorld 'work_block_grown 1)))(action 0))
             
             
-            ((condition ((< (random 5) 1))) 
+            ((condition ((< (random 7) 1))) 
              (output ((setInfosWorld 'monster_in_village (random 2)))) (action 0))
             ((condition ((< (random 3) 1))) 
              (output ((setInfosWorld 'player_in_village  (random 2)))) (action 0))
@@ -304,6 +304,10 @@
             ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
             
+            ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0))) 
+             (output ((moveTowardDoor (getCoordPNJ) plateau) (setCoordPNJ (+ (car(getCoordPNJ)) 1) (cadr (getCoordPNJ))) (setInfosPNJ 'outside 1))) (action 1) (phrase "Il fait jour ! Je sors dehors"))
+            
+            
             ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
             
@@ -317,8 +321,8 @@
              (phrase "Je... me reproduit"))
             
             ;; farm
-            ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
-             (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
+            ((condition ((eq (getInfosPNJ 'outside) 1)(eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
+             (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+ (getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
             ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 0) )) 
              (output ()) (action 1) (phrase "Je fais dodo"))
             ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 3))) 
@@ -387,8 +391,3 @@
       )))
 
 (mainGameLoop big_base_de_fait BDR 10)
-(getNearestBlock (getCoordPNJ) 'job_block plateau)
-(getCoordPNJ)
-
-(distanceCoords (getCoordPNJ) '((X 2) (Y 4) (HAUTEUR 0) (INTERIEUR 0) (PORTE 0) (PNJ 0) (BED 0)
-  (TYPE_FLOOR PATHWAY) (JOB_BLOCK 1)))
