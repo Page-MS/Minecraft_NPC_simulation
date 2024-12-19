@@ -283,8 +283,8 @@
             
            
             ;; breed
-            ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfoPNJ 'food_items) 11))) 
-             (output ((setInfoPNJ 'consenting 1))) (action 0))
+            ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfosPNJ 'food_items) 11))) 
+             (output ((setInfosPNJ 'consenting 1))) (action 0))
             
             ((condition ((eq (getInfosPNJ 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 4) (eq (getInfosPNJ 'breed_count_down) 0))) 
              (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfoPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1))
