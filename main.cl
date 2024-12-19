@@ -281,19 +281,23 @@ plateau
             ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfosPNJ 'food_items) 11))) 
              (output ((setInfosPNJ 'consenting 1))) (action 0))
             
-            ((condition ((eq (getInfosPNJ 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 4) (eq (getInfosPNJ 'breed_count_down) 0))) 
+            ((condition ((eq (getInfosWorld 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 4) (eq (getInfosPNJ 'breed_count_down) 0))) 
              (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfoPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1))
             
             ;; farm
             ((condition ((eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
              (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+(getInfosPNJ 'food_items) (random 3))) )) (action 1))
             
-            ((condition ()) 
+            ;((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0) )) 
+            ; (output (moveTowardDoor (getCoordPNJ) plateau)) (action 1) (phrase "C est la nuit, vite, je me dirige vers chez moi"))
+            ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 1) )) 
+             (output ()) (action 1) (phrase "Je fais dodo"))
+            ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 5))) 
+             (output ((setInfosWorld 'player_emeralds 0) (setInfosPNJ 'food_items 0))) (action 1) (phrase "Je fais des echanges avec la joueuse, ses emeraudes contre mon pain"))
+            ((condition ((< (random 3) 1))) 
              (output ()) (action 0))
             ((condition ()) 
-             (output ()) (action 0))
-            ((condition ()) 
-             (output ()) (action 0))
+             (output ()) (action 1) (phrase "HMMMMMM Je m ennuie") )
          
             )
   )
