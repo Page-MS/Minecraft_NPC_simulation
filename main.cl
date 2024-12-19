@@ -58,6 +58,7 @@
 (defun getInfosPNJ (type)
   (cadr (assoc type Miguel)))
 
+
 (defun setInfosPNJ (type value)
   (setf (cadr (assoc type Miguel)) value)
   )
@@ -240,9 +241,14 @@
 
 ;////////////////BASE DE REGLES///////////////////////
 
-(setf BDR '(((condition ((or (< (getInfosWorld 'heure) 8) (> (getInfosWorld 'heure) 19))) 
+(setf BDR '(((condition ((equal 24 (getInfosWorld 'heure)))) 
+             (output ((setInfosWorld 'heure 2))) (action 0))
+            ((condition ((not(equal 24 (getInfosWorld 'heure))))) 
+             (output ((setInfosWorld 'heure (+ (getInfosWorld 'heure) 2)))) (action 0))
+            
+            ((condition ((or (< (getInfosWorld 'heure) 8) (> (getInfosWorld 'heure) 19))) 
              (output ((setInfosWorld 'nuit 1))) (action 0)))
-            ((condition ((or (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
+            ((condition ((and (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
              (output ((setInfosWorld 'nuit 0) (setInfosPNJ 'breed_count 0))) (action 0))
             ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
              (output ((setInfosWorld 'baby_villager_countdown (- (getInfosWorld 'baby_villager_countdown) 1)))))
@@ -253,12 +259,9 @@
             ((condition ((> (getInfosWorld 'work_block_grown_countdown) 0)))
              (output ((setInfosWorld 'work_block_grown_countdown (- (getInfosWorld 'work_block_grown_countdown) 1)))) (action 0))
             ((condition ((eq (getInfosWorld 'work_block_grown_countdown) 0))) 
-              (output ((setInfosWorld 'work_block_grown_countdown 1)))(action 0))
+              (output ((setInfosWorld 'work_block_grown 1)))(action 0))
             
-            ((condition ((equal 24 (getInfosWorld 'heure)))) 
-             (output ((setInfosWorld 'heure 2))) (action 0))
-            ((condition ((not(equal 24 (getInfosWorld 'heure))))) 
-             (output ((setInfosWorld 'heure (+ (getInfosWorld 'heure) 2)))) (action 0))
+            
             ((condition ((< (random 3) 1))) 
              (output ((setInfosWorld 'monster_in_village (random 2)))) (action 0))
             ((condition ((< (random 3) 1))) 
@@ -307,20 +310,42 @@
   (cadr(assoc 'output regle)))
 (defun isActionRule (regle) 
   (cadr(assoc 'action regle)))
+(defun getPhrase (regle) 
+  (cadr(assoc 'phrase regle)))
+
 
 (defun mainGameLoop (base_de_fait BDR num_iteration)
-  (let ((nouvelle_base base_de_fait))
-  (if (> num_iteration 0)
-      (dolist (regle BDR base_de_fait)
-        (let ((conditions (getPremisseRegle regle))
-              (outputs (getOutputRegle regle)))
-          (when (eval `(and ,@conditions)) ; evalue les conditions dynamiquement
-              (dolist (output outputs)
-                (eval output)))) 
-        ;; Appel recursif avec une iteration en moins
-        (mainGameLoop nouvelle_base BDR (- num_iteration 1)))
-        nouvelle_base)
-    ;; Si aucune iteration restante, on retourne la base de faits
-    ))        
+  (let ((nouvelle_base base_de_fait)
+        (action 0)) ;; Initialise une copie de la base de faits
+    
+    (print num_iteration) ;; Affiche l'itération actuelle
+
+    ;; Si le nombre d'itérations est encore positif
+    (if (and(> num_iteration 0) (eq action 0))
+        (progn
+          ;; Parcours des règles dans la base de règles (BDR)
+          (dolist (regle BDR)
+            (let ((conditions (getPremisseRegle regle))
+                  (outputs (getOutputRegle regle))
+                  (action (isActionRule regle)))
+              ;; Évaluer les conditions de la règle
+              (when (eval `(and ,@conditions)) 
+                ;; Appliquer les actions si les conditions sont vraies
+                (dolist (output outputs)
+                  (eval output) ;; Exécute l'action
+                  (print output)
+                  (if (eq action 1)
+                      (progn
+                        (print (getPhrase regle))
+                        (return)
+                        )
+                      )
+                  ))))
+
+          ;; Appel récursif pour l'itération suivante
+          (mainGameLoop nouvelle_base BDR (- num_iteration 1)))
+
+        ;; Sinon, retourner la base de faits (fin de la boucle)
+        etat_du_monde)))
        
-(mainGameLoop big_base_de_fait BDR 3)
+(mainGameLoop big_base_de_fait BDR 60)
