@@ -180,7 +180,7 @@
         )
     (dolist (coord coords)
       (when (equal 1 (cadr (assoc type_block coord)));; Si un block du type recherche est present en x y       
-        (let ((distance (distanceCoords coord_depart coord))); Calculer la distance en une seule fois
+        (let ((distance (distanceCoords coord_depart block))); Calculer la distance en une seule fois
           (when (< distance min)
             (setf min distance)
             (setf resultat (list coord distance)))))); Mettre a jour resultat si distance plus petite
@@ -234,11 +234,12 @@
             (print current_coords)
             ))
       )
-     current_coords
+     (setCoordPNJ x1 y1)
     )
   )
 
 ;(moveTowardDoor '(3 4) plateau)
+;(getCoordPNJ)
 
 ;permet de se balader au hasard
 
@@ -298,11 +299,11 @@
 
             
             ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a l'interieur
-            ((condition ((eq (getInfosPNJ 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (getCoordPNJ) plateau) plateau) (setInfosPNJ 'outside 0) (print "NUII"))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
+            ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
+             (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosWorld 'outside 0))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
             
             ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getInfosCoord (getCoordPNJ) plateau) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
+             (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosWorld 'outside 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
             
            
             ;; breed
@@ -382,5 +383,5 @@
       
       
       )))
-       
+
 (mainGameLoop big_base_de_fait BDR 10)
