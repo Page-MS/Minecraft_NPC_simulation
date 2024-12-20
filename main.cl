@@ -83,6 +83,7 @@
  (list (cadr (assoc 'coords_x Miguel)) (cadr (assoc 'coords_y Miguel)))
   )
 
+
 (defun setCoordPNJ (x y)
   (setf (cadr (assoc 'coords_x Miguel)) x)
   (setf (cadr (assoc 'coords_y Miguel)) y)
@@ -101,8 +102,17 @@
      ))
   )
 
+(defun setInfosCoord (current_coord type value plateau)
+  (let ((coord (getInfosCoord current_coord plateau)))
+    
+   (setf (cadr(assoc type coord)) value)
+    )
+  )
+
+
 ;(getInfosCoord '(0 1) plateau)
 ;(getInfosCoord '(0 5) plateau)
+;(setInfosCoord '(0 1) 'hauteur 7 plateau)
 
 ;recupere la hauteur d'un bloc
 (defun getHauteur (current_coord plateau)
@@ -164,12 +174,29 @@
 ;(isJobBlock '(0 5) plateau)
 ;(isJobBlock '(0 0) plateau)
 
+
+(defun getRandomCoord ()
+  (let* ((x (random 6))
+         (y (random 6))
+         (coord (list x y)))
+    
+    (if (and (eq (getHauteur coord plateau) 0) (eq (hasPNJ coord plateau )0))
+        coord
+      (getRandomCoord)
+    
+      )
+    )
+  )
+
+;(getRandomCoord)
+
 ;;calcul de la distance de Manhattan entre deux blocs
 (defun distanceCoords (coord_depart coords_arrivee)
   (let ((x1 (car coord_depart)) (y1 (cadr coord_depart)) (x2 (cadr (assoc 'x coords_arrivee))) (y2 (cadr (assoc 'y coords_arrivee))))
   (+ (abs (- x1 x2)) (abs (- y1 y2)))))
 
 ;(distanceCoords '(0 1) (getInfosCoord '(3 5) plateau))
+
 
 
 ;///////POUR AVOIR LES COORDS DES CONCEPTS LES PLUS PROCHES/////////
@@ -268,27 +295,37 @@
 
 ;////////////////BASE DE REGLES///////////////////////
 
-(setf BDR '(((condition ((equal 24 (getInfosWorld 'heure)))) 
+(setf BDR '(;; mettre à jour l'heure
+            ((condition ((equal 24 (getInfosWorld 'heure)))) 
              (output ((setInfosWorld 'heure 2))) (action 0))
             ((condition ((not(equal 24 (getInfosWorld 'heure))))) 
              (output ((setInfosWorld 'heure (+ (getInfosWorld 'heure) 2)))) (action 0))
             
-            ((condition ((or (< (getInfosWorld 'heure) 8) (> (getInfosWorld 'heure) 19))) 
-             (output ((setInfosWorld 'nuit 1))) (action 0)))
-            ((condition ((and (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 20)))) 
+            ;; mettre à jour l'attribut nuit en fonction de l'heure
+            ((condition ((or (< (getInfosWorld 'heure) 9) (> (getInfosWorld 'heure) 19)))) 
+             (output ((setInfosWorld 'nuit 1))) (action 0))
+            ((condition ((and (> (getInfosWorld 'heure) 7) (< (getInfosWorld 'heure) 21)))) 
              (output ((setInfosWorld 'nuit 0) (setInfosPNJ 'breed_count 0))) (action 0))
+            
+            ;; si il y a un enfant faire diminuer son coutdown
             ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
              (output ((setInfosWorld 'baby_villager_countdown (- (getInfosWorld 'baby_villager_countdown) 1)))))
-            ((condition ((= (getInfosWorld 'baby_villager_countdown) 0)))
-             (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+ (getInfosWorld 'npc_in_village )1)))) (action 0))
+            
+            ;; si countdown = 0 l'enfant devient adulte
+            ((condition ( ((getInfosWorld 'nb_baby_villager) 0)(= (getInfosWorld 'baby_villager_countdown) 0)))
+             (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+ (getInfosWorld 'npc_in_village )1)) (setInfosCoord (getRandomCoord) 'PNJ 1 plateau))) (action 1) (phrase "L'enfant est devenu adulte. Un nouveau PNJ est présent dans le village."))
+
             ((condition ((> (getInfosPNJ 'breed_countdown) 0)))
              (output ((setInfosPNJ 'breed_countdown (- (getInfosPNJ 'breed_countdown) 1)))) (action 0))
+           
             ((condition ((> (getInfosWorld 'work_block_grown_countdown) 0)))
              (output ((setInfosWorld 'work_block_grown_countdown (- (getInfosWorld 'work_block_grown_countdown) 1)))) (action 0))
+            
+            ;; si le countdown = 0, le block est prêt à être cultiver
             ((condition ((eq (getInfosWorld 'work_block_grown_countdown) 0))) 
               (output ((setInfosWorld 'work_block_grown 1)))(action 0))
             
-            
+            ;; apparition aléatoire 
             ((condition ((< (random 7) 1))) 
              (output ((setInfosWorld 'monster_in_village (random 2)))) (action 0))
             ((condition ((< (random 3) 1))) 
@@ -297,9 +334,7 @@
              (output ((setInfosWorld 'thunderstorm (random 2)))) (action 0))
             ((condition ((eq(getInfosWorld 'player_in_village) 1)(< (random 6) 1))) 
              (output ((setInfosWorld 'player_emeralds (+ (getInfosWorld 'player_emeralds) (random 3))))) (action 0))           
-
-
-            
+       
             ; se deplace vers le batiment le plus proche pour aller dormir ou se refugier a l'interieur
             ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0))) (action 1) (phrase "Il fait nuit ! Je rentre chez moi"))
@@ -307,28 +342,32 @@
             ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0))) 
              (output ((moveTowardDoor (getCoordPNJ) plateau) (setCoordPNJ (+ (car(getCoordPNJ)) 1) (cadr (getCoordPNJ))) (setInfosPNJ 'outside 1))) (action 1) (phrase "Il fait jour ! Je sors dehors"))
             
-            
             ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
              (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0) (setInfosWorld 'monster_in_village 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
-            
            
-            ;; breed
             ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfosPNJ 'food_items) 11))) 
              (output ((setInfosPNJ 'consenting 1))) (action 0))
             
-            ((condition ((eq (getInfosWorld 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 5))) 
+            
+            ;; breed
+            ((condition ((eq (getInfosWorld 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 5) ( < (cadr(getNearestBlock (getCoordPNJ) 'PNJ plateau)) 4) (random 2))) 
              (output ((setInfosWorld 'nb_baby_villager 1) (setInfosWorld 'baby_villager_countdown 20) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 12)) (setInfosPNJ 'breed_countdown 5) (setInfosPNJ 'breed_count (+ (getInfosPNJ 'breed_count) 1)) (setInfosPNJ 'consenting 0))) (action 1)
-             (phrase "Je... me reproduit"))
+             (phrase "Je... me reproduit. Un nouvel enfant apparait dans le village."))
             
             ;; farm
             ((condition ((eq (getInfosPNJ 'outside) 1)(eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
              (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+ (getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
-            ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 0) )) 
-             (output ()) (action 1) (phrase "Je fais dodo"))
+            
+            ;;trade
             ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 3))) 
              (output ((setInfosWorld 'player_emeralds 0) (setInfosPNJ 'food_items 0))) (action 1) (phrase "Je fais des echanges avec la joueuse, ses emeraudes contre mon pain"))
+            
             ((condition ((< (random 2) 1) (eq (getInfosPNJ 'outside) 1)))
              (output ((wanderAround (getCoordPNJ)))) (action 1) (phrase "Je me balade"))
+            ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 0) )) 
+             (output ()) (action 1) (phrase "Je fais dodo"))
+            
+            
             ((condition ()) 
              (output ()) (action 1) (phrase "HMMMMMM Je m ennuie") )
          
