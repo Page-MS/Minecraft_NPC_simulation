@@ -50,7 +50,6 @@
 
 (setf Miguel '((consenting 0) (breed_count 0) (coords_x 3) (coords_y 4) (food_items 12) (outside 1) (distance_to_work 5) (distance_to_bed 0) (breed_countdown 0)))
 
-(setf *random-state* (make-random-state t))
 ;La base de faits complete contenant toutes nos variables
 (setf big_base_de_fait (list plateau etat_du_monde Miguel))
 
@@ -232,7 +231,7 @@
          (distance_y (- y1 y2))
          )
     
-    (while (and (not(eq x1 x2)) (not (eq y1 y2)))
+    (while (or (not(eq x1 x2)) (not (eq y1 y2)))
      (if (and (< distance_x 0) (< (getHauteur (list (+ x1 1) y1) coords) 2))
          (progn
             (incf (car current_coords) 1)
@@ -267,7 +266,7 @@
     )
   )
 
-;(moveTowardDoor '(3 4) plateau)
+;(moveTowardDoor '(2 2) plateau)
 ;(getCoordPNJ)
 
 ;permet de se balader au hasard
@@ -306,12 +305,12 @@
              (output ((setInfosWorld 'nuit 0) (setInfosPNJ 'breed_count 0))) (action 0))
             
             ;; si il y a un enfant faire diminuer son coutdown
-            ((condition ((> (getInfosWorld 'baby_villager_countdown) 1))) 
+            ((condition ((> (getInfosWorld 'baby_villager_countdown) 0))) 
              (output ((setInfosWorld 'baby_villager_countdown (- (getInfosWorld 'baby_villager_countdown) 1)))))
             
             ;; si countdown = 0 l'enfant devient adulte
-            ((condition ( (eq (getInfosWorld 'nb_baby_villager) 1)(= (getInfosWorld 'baby_villager_countdown) 0)))
-             (output ((setInfosWorld 'baby_villager_countdown 0) (setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+ (getInfosWorld 'npc_in_village )1)) (setInfosCoord (getRandomCoord) 'PNJ 1 plateau))) (action 1) (phrase "L'enfant est devenu adulte. Un nouveau PNJ est présent dans le village."))
+            ((condition ((eq (getInfosWorld 'baby_villager_countdown) 0) (eq (getInfosWorld 'nb_baby_villager) 1)))
+             (output ((setInfosWorld 'nb_baby_villager 0)(setInfosWorld 'npc_in_village (+ (getInfosWorld 'npc_in_village )1)) (setInfosCoord (getRandomCoord) 'PNJ 1 plateau))) (action 1) (phrase "L'enfant est devenu adulte. Un nouveau PNJ est présent dans le village."))
 
             ((condition ((> (getInfosPNJ 'breed_countdown) 0)))
              (output ((setInfosPNJ 'breed_countdown (- (getInfosPNJ 'breed_countdown) 1)))) (action 0))
@@ -340,12 +339,11 @@
             ((condition ((eq (getInfosWorld 'nuit) 0) (eq (getInfosPNJ 'outside) 0))) 
              (output ((moveTowardDoor (getCoordPNJ) plateau) (setCoordPNJ (+ (car(getCoordPNJ)) 1) (cadr (getCoordPNJ))) (setInfosPNJ 'outside 1))) (action 1) (phrase "Il fait jour ! Je sors dehors"))
             
-            ((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
-             (output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0) (setInfosWorld 'monster_in_village 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
+            ;((condition ((eq (getInfosWorld 'monster_in_village) 1) (eq (getInfosPNJ 'outside) 1))) 
+             ;(output ((moveTowardDoor (getCoordPNJ) plateau) (setInfosPNJ 'outside 0) (setInfosWorld 'monster_in_village 0))) (action 1) (phrase "Un monstre est dans le village et je ne suis pas chez moi ! Je vais me refugier"))
            
             ((condition ((eq (getInfosPNJ 'breed_countdown) 0) (> (getInfosPNJ 'food_items) 11))) 
              (output ((setInfosPNJ 'consenting 1))) (action 0))
-            
             
             ;; breed
             ((condition ((eq (getInfosWorld 'nuit) 0) (< (getInfosPNJ 'breed_count) 2) (eq (getInfosPNJ 'consenting) 1) (< (cadr(getNearestBlock (getCoordPNJ) 'bed plateau)) 5) (< (cadr(getNearestBlock (getCoordPNJ) 'PNJ plateau)) 8))) 
@@ -353,20 +351,20 @@
              (phrase "Je... me reproduit. Un nouvel enfant apparait dans le village."))
             
             ;; farm
-            ((condition ((eq (getInfosPNJ 'outside) 1)(eq (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 0) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
+            ((condition ((eq (getInfosPNJ 'outside) 1)(< (cadr(getNearestBlock (getCoordPNJ) 'job_block plateau)) 2) (eq(getInfosWorld 'work_block_grown) 1) (eq (getInfosWorld 'nuit) 0))) 
              (output ((setInfosWorld 'work_block_grown 0) (setInfosWorld 'work_block_grown_countdown 7) (setInfosPNJ 'food_items (+ (getInfosPNJ 'food_items) (random 3))) )) (action 1) (phrase "Je cultive des patates"))
             
             ;;trade
-            ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 3) (eq (getInfosWorld 'nuit)0) (isInterieur (getCoordPNJ) plateau))) 
-             (output ((setInfosWorld 'player_emeralds 0) (setInfosPNJ 'food_items 0))) (action 1) (phrase "Je fais des echanges avec la joueuse, ses emeraudes contre mon pain"))
+            ((condition ((eq (getInfosWorld 'player_in_village) 1) (> (getInfosWorld 'player_emeralds) 3) (eq (getInfosWorld 'nuit) 0) (eq(getInfosPNJ 'outside)1) (> (getInfosPNJ 'food_items)2))) 
+             (output ((setInfosWorld 'player_emeralds 0) (setInfosPNJ 'food_items (- (getInfosPNJ 'food_items) 3)) )) (action 1) (phrase "Je fais des echanges avec la joueuse, ses emeraudes contre mon pain"))
             
-            ((condition ((< (random 2) 1) (eq (getInfosPNJ 'outside) 1)))
+            ((condition ((< (random 3) 1) (eq (getInfosPNJ 'outside) 1)))
              (output ((wanderAround (getCoordPNJ)))) (action 1) (phrase "Je me balade"))
             ((condition ((eq (getInfosWorld 'nuit) 1) (eq (getInfosPNJ 'outside) 0) )) 
              (output ()) (action 1) (phrase "Je fais dodo"))
             
             
-            ((condition ()) 
+            ((condition ((eq (getInfosWorld 'nuit )0))) 
              (output ()) (action 1) (phrase "HMMMMMM Je m ennuie") )
          
             )
@@ -407,7 +405,7 @@
                   (print output)
                   )
                 (if (eq action 1)
-                      (progn
+                    (progn
                         (print (getPhrase regle))
 
                         )
@@ -427,4 +425,4 @@
       
       )))
 
-(mainGameLoop big_base_de_fait BDR 30)
+(mainGameLoop big_base_de_fait BDR 40)
