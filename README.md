@@ -4,7 +4,7 @@ Bienvenue sur notre programme de simulation d'un NPC Minecraft de type fermier. 
 
 Notre principale source d’expertise est la suivante : https://minecraft.fandom.com/wiki/Villager
 
-Notre base de règles utilisant de nombreuses fonctions aléatoires (comme par exemple le déplacement du PNJ), chaque éxecution produit un scenario d'action différent. La base de fait initial est actuellement la plus optimale pour permettre une diversité d'actions en peu de tours. Cependant, il est tout à fait possible de jouer avec pour découvrir de nouveaux scénarios et intéragir de manière nouvelle avec ce programme.
+Notre base de règles utilisant de nombreuses fonctions aléatoires (comme par exemple le déplacement du PNJ), chaque éxecution produit un scenario d'action différent. La base de fait initial est actuellement la plus optimale pour permettre une diversité d'actions en peu de tours. Cependant, il est tout à fait possible de jouer avec pour découvrir de nouveaux scénarios et intéragir de manière nouvelle avec ce programme. De plus, à chaque itération aparait l'état du monde, l'état du personnage, ainsi que les règles exécutés pour facilité le suivi du programme et l'altération de la base de fait.
 
 
 De nombreuses fonctions de service sont mises à disposition pour intéragir avec la base de fait que ce soit pour récupérer ou modifier des informations. 
